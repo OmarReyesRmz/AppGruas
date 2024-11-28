@@ -16,6 +16,7 @@ class PedirGrua : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
+
         setContentView(R.layout.activity_main)
 
         // Datos para los Spinners
