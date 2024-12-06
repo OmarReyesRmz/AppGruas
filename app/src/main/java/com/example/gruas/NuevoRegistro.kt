@@ -130,17 +130,22 @@ class NuevoRegistro: AppCompatActivity() {
         dialogMessage.text = message
 
         dialogButton.setOnClickListener {
-            // Deshabilitar el botón para evitar múltiples clics
+            // Deshabilitar el botón inmediatamente
             dialogButton.isEnabled = false
 
-            // Cerrar el diálogo y ejecutar la acción
-            dialog.dismiss()
+            // Ejecutar la acción personalizada solo una vez
             onButtonClick?.invoke()
+
+            // Cerrar el diálogo después de un pequeño retraso para asegurar que no se active de nuevo
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            // Deshabilitar animaciones adicionales al cerrar
+            dialogButton.isEnabled = false
         }
 
         dialog.show()
     }
-
-
 }
 

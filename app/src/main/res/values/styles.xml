@@ -2,6 +2,6 @@
 <resources>
     <style name="DialogAnimation">
         <item name="android:windowEnterAnimation">@anim/dialog_slide_in</item>
-        <item name="android:windowExitAnimation">@anim/dialog_slide_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_slide_out</item>
     </style>
 </resources>

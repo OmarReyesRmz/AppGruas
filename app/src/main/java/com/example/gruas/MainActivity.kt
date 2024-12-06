@@ -82,16 +82,7 @@
             //No hay nada
             if(Email.isEmpty() || Password.isEmpty()) {
                 // Mostrar una ventana emergente si los campos están vacíos
-                val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("Campos Vacíos")
-                    .setMessage("Por favor, llena ambos campos antes de continuar.")
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setNegativeButton("OK") { dialog, _ ->
-                        dialog.dismiss() // Cierra la ventana emergente
-                    }
-                    .create()
-
-                alertDialog.show()
+                showCustomDialog("Por favor, llena ambos campos antes de continuar.")
                 return
             }
             for (conductor in conductores) {
@@ -107,33 +98,46 @@
                     }else{
                         // Se equivo de contraseña pero no email
                         // Mostrar una ventana emergente si los campos están vacíos
-                        val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this)
-                            .setTitle("Error de Inicio de Sesión")
-                            .setMessage("La contraseña que ingresaste no es correcta. ¿Quieres intentarlo de nuevo?")
-                            .setIcon(android.R.drawable.ic_dialog_alert) // Ícono de alerta del sistema
-                            .setPositiveButton("Reintentar") { dialog, _ ->
-                                // Acción para el botón "Reintentar"
-                                dialog.dismiss() // Cierra la alerta
-                            }
-                            .create()
-
-                        alertDialog.show()
+                        showCustomDialog("La contraseña que ingresaste no es correcta. ¿Quieres intentarlo de nuevo?")
                         return
                     }
                 }
             }
             // Se equivoco en el email, no existe
             // Mostrar una ventana emergente si los campos están vacíos
-            val alertDialog = androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Email Incorrecto")
-                .setMessage("Este email no existe en nuestros registros.")
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setNeutralButton("OK") { dialog, _ ->
-                    dialog.dismiss() // Cierra la ventana emergente
-                }
-                .create()
+            showCustomDialog("Este email no existe en nuestros registros.")
+        }
 
-            alertDialog.show()
+        private fun showCustomDialog(message: String, onButtonClick: (() -> Unit)? = null) {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_alert, null)
+            val dialog = android.app.AlertDialog.Builder(this).setView(dialogView).create()
+
+            // Configura la animación del diálogo
+            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+
+            // Configura el mensaje y el botón
+            val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
+            val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+
+            dialogMessage.text = message
+
+            dialogButton.setOnClickListener {
+                // Deshabilitar el botón inmediatamente
+                dialogButton.isEnabled = false
+
+                // Ejecutar la acción personalizada solo una vez
+                onButtonClick?.invoke()
+
+                // Cerrar el diálogo después de un pequeño retraso para asegurar que no se active de nuevo
+                dialog.dismiss()
+            }
+
+            dialog.setOnDismissListener {
+                // Deshabilitar animaciones adicionales al cerrar
+                dialogButton.isEnabled = false
+            }
+
+            dialog.show()
         }
 
 
