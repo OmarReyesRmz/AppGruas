@@ -1,5 +1,6 @@
 package com.example.gruas
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.fragment.app.Fragment
+import androidx.appcompat.widget.AppCompatButton
 
 class HomeFragment : Fragment() {
 
@@ -30,6 +32,13 @@ class HomeFragment : Fragment() {
 
         // Configurar los Spinners
         setupSpinners(view)
+
+        val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
+        callCraneButton.setOnClickListener {
+            // Iniciar la actividad MapaActivity
+            val intent = Intent(requireContext(), Mapa::class.java)
+            startActivity(intent)
+        }
 
         return view
     }
