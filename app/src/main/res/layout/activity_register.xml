@@ -187,6 +187,31 @@
             android:textColor="#707070"
             android:textSize="18sp" />
 
+
+        <TextView
+            android:id="@+id/textViewDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Direccion"
+            android:layout_marginTop="16dp"
+            android:textColor="@color/antracit_gray"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/editTextDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edittext_background"
+            android:ems="10"
+            android:hint="Introduce tu Direccion"
+            android:inputType="text"
+            android:padding="12dp"
+            android:textColor="#707070"
+            android:textSize="18sp" />
+
+
         <TextView
             android:id="@+id/textViewPassword"
             android:layout_width="match_parent"

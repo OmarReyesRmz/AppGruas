@@ -1,0 +1,27 @@
+<!-- dialog_alert.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/dialog_background">
+
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mensaje de alerta"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:paddingBottom="10dp"
+        android:textColor="@color/black" />
+
+    <Button
+        android:id="@+id/dialog_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Aceptar"
+        android:background="@drawable/button_background2"
+        android:textColor="@color/white" />
+</LinearLayout>
