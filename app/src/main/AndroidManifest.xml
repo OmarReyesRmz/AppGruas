@@ -25,10 +25,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".PedirGrua">
+        <activity android:name=".NuevoRegistro">
 
         </activity>
-        <activity android:name=".NuevoRegistro">
+        <activity android:name=".PedirGrua2">
 
         </activity>
     </application>
