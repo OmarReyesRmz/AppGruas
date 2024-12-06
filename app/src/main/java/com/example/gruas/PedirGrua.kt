@@ -2,61 +2,56 @@ package com.example.gruas
 
 import android.os.Bundle
 import android.view.WindowManager
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.example.gruas.databinding.ActivityFragmentsBinding
 
 class PedirGrua : AppCompatActivity() {
 
+    private lateinit var binding: ActivityFragmentsBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Ocultar la barra de estado
-        getWindow().setFlags(
+
+        // Habilita el modo de pantalla completa
+        window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
 
+        // Inicializa el binding
+        binding = ActivityFragmentsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        setContentView(R.layout.activity_main)
-
-        // Datos para los Spinners
-        val locationOptions = listOf("Mi Ubicación", "Otra Ubicación")
-        val craneOptions = listOf("Grua Hidráulica", "Grua de Plataforma", "Grua de Arrastre", "Grua Telescópica", "Grua de Carga")
-
-        // Referencias de los Spinners
-        val locationSpinner: Spinner = findViewById(R.id.spinnerLocation)
-        val craneSpinner: Spinner = findViewById(R.id.spinnerCraneType)
-
-        // Adaptadores para los Spinners
-        val locationAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locationOptions)
-        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        locationSpinner.adapter = locationAdapter
-
-        val craneAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, craneOptions)
-        craneAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        craneSpinner.adapter = craneAdapter
-
-        // Manejo de selección
-        locationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                val selectedLocation = locationOptions[position]
-                // Realiza acciones con el valor seleccionado
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // No se seleccionó nada
+        // Configura el BottomNavigationView
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.Home -> {
+                    loadFragment(HomeFragment())
+                    true
+                }
+                R.id.Profile -> {
+                    loadFragment(ProfileFragment())
+                    true
+                }
+                R.id.Settings -> {
+                    loadFragment(SettingsFragment())
+                    true
+                }
+                else -> false
             }
         }
 
-        craneSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                val selectedCrane = craneOptions[position]
-                // Realiza acciones con el valor seleccionado
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // No se seleccionó nada
-            }
+        // Carga el fragmento inicial (HomeFragment)
+        if (savedInstanceState == null) {
+            loadFragment(HomeFragment())
         }
+    }
+
+    // Método para reemplazar fragmentos en el FrameLayout
+    private fun loadFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.frame_layout, fragment)
+            .commit()
     }
 }

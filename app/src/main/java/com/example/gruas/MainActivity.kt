@@ -99,7 +99,7 @@
                     if(Password == conductor.password){
                         //Contraseña e Email correctos
                         // Inicia la otra actividad
-                        val intent = Intent(this, PedirGrua2::class.java)
+                        val intent = Intent(this, PedirGrua::class.java)
                         intent.putExtra("nombre", conductor.nombre)
                         startActivity(intent)
                         finish()
