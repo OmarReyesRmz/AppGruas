@@ -62,9 +62,9 @@ class NuevoRegistro: AppCompatActivity() {
             val password2 = EditTextPassword2.text.toString()
             val fullName = "$lastname1 $lastname2"
 
-            if(name.isNotEmpty() || lastname1.isNotEmpty() || lastname2.isNotEmpty()
-                || email.isNotEmpty() || phone.isNotEmpty() || direccion.isNotEmpty() ||
-                password1.isNotEmpty() || password2.isNotEmpty()){
+            if(name.isNotEmpty() && lastname1.isNotEmpty() && lastname2.isNotEmpty()
+                && email.isNotEmpty() && phone.isNotEmpty() && direccion.isNotEmpty() &&
+                password1.isNotEmpty() && password2.isNotEmpty()){
                 if (password1 == password2) {  // Asegúrate de que las contraseñas coinciden
                     val nuevoCliente = Clientes(1, name, fullName, direccion, phone, email, password1)
 
