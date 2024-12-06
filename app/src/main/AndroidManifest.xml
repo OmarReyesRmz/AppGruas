@@ -28,7 +28,7 @@
         <activity android:name=".NuevoRegistro">
 
         </activity>
-        <activity android:name=".PedirGrua2">
+        <activity android:name=".PedirGrua">
 
         </activity>
     </application>
