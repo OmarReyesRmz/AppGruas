@@ -37,7 +37,7 @@
 
             if(!db.datosExistentes()){
                 db.guardarDatos("NO","NIGUNO","NIGUNO","NIGUNO",
-                    "NIGUNO","NIGUNO","NIGUNO","NIGUNO","NIGUNO","NO")
+                    "NIGUNO","NIGUNO","NIGUNO",0f,0f,"NO")
             }else if(db.obtenerLogeado() == "SI"){
                 val intent = Intent(this, PedirGrua::class.java)
                 startActivity(intent)
@@ -104,6 +104,7 @@
                         db.actualizarapellidos(cliente.apellido)
                         db.actualizardireccion(cliente.direccion)
                         db.actualizartelefono(cliente.telefono)
+                        db.actualizarid(cliente.id)
                         db.actualizarlogeado("SI")
                         db.actualizartipo_usuario("cliente")
                         startActivity(intent)

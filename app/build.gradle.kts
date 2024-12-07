@@ -60,4 +60,13 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+    // Biblioteca de Google Maps para Android
+    implementation ("com.google.android.gms:play-services-maps:18.0.2")
+
+    // Utilidades de Google Maps para funciones como `PolyUtil`
+    implementation ("com.google.maps.android:android-maps-utils:2.4.0")
+
+    // Biblioteca OkHttp para solicitudes HTTP
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+
 }

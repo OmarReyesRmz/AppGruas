@@ -1,5 +1,7 @@
 package com.example.gruas
 
+import com.example.gruas.Ubicacion
+
 data class Clientes(
     val id: Int,
     val nombre: String,
@@ -7,5 +9,6 @@ data class Clientes(
     val direccion: String,
     val telefono: String,
     val email: String,
-    val password: String
+    val password: String,
+    val ubicacion: Ubicacion
 )

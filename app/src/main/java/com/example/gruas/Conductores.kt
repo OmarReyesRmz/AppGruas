@@ -7,5 +7,8 @@ class Conductores (
     val direccion: String,
     val telefono: String,
     val email: String,
-    val password: String
+    val password: String,
+    val ubicacion: Ubicacion,
+    val solicitud: Solicitud,
+    val aceptada: Boolean
 )

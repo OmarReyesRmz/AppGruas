@@ -22,8 +22,8 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
                     "correo TEXT NOT NULL," +   // 1 para true (sí es la primera vez), 0 para false
                     "direccion TEXT NOT NULL," +  // Dinero acumulado
                     "tipo_usuario TEXT NOT NULL," +      // Tipo de serpiente elegida por el jugador
-                    "latitud TEXT NOT NULL," +
-                    "longitud TEXT NOT NULL," +
+                    "latitud FLOAT NOT NULL," +
+                    "longitud FLOAT NOT NULL," +
                     "logeado TEXT NOT NULL" +
                     ")"
         )
@@ -53,13 +53,20 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
 
     fun guardarDatos(realizado_pedido: String, nombre: String, apellidos: String,
                      telefono: String, correo: String, direccion: String,
-                     tipo_usuario: String, latitud: String, longitud: String, logeado:String){
+                     tipo_usuario: String, latitud: Float, longitud: Float, logeado:String){
         val db = writableDatabase
         db.execSQL(
             "INSERT INTO $TABLE_NAME (realizado_pedido, nombre, apellidos, telefono, correo, direccion, tipo_usuario, latitud, longitud,logeado\n ) " +
-                    "VALUES('$realizado_pedido', '$nombre', '$apellidos', '$telefono', '$correo', '$direccion', '$tipo_usuario', '$latitud', '$longitud', '$logeado')\n"
+                    "VALUES('$realizado_pedido', '$nombre', '$apellidos', '$telefono', '$correo', '$direccion', '$tipo_usuario', $latitud, $longitud, '$logeado')\n"
         )
 
+    }
+
+    // Métodos para actualizar (SET)
+    fun actualizarid(primeravez: Int) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET id = $primeravez")
+        db.close()
     }
 
     // Métodos para actualizar (SET)
@@ -105,15 +112,15 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         db.close()
     }
 
-    fun actualizarlatitud(iman: String) {
+    fun actualizarlatitud(iman: Float) {
         val db = writableDatabase
-        db.execSQL("UPDATE $TABLE_NAME SET latitud = '$iman'")
+        db.execSQL("UPDATE $TABLE_NAME SET latitud = $iman")
         db.close()
     }
 
-    fun actualizarlongitud(monedax5: String) {
+    fun actualizarlongitud(monedax5: Float) {
         val db = writableDatabase
-        db.execSQL("UPDATE $TABLE_NAME SET longitud = '$monedax5'")
+        db.execSQL("UPDATE $TABLE_NAME SET longitud = $monedax5")
         db.close()
     }
 
@@ -124,6 +131,17 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
     }
 
     // Métodos para obtener valores (GET)
+    fun obtenerid(): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT id FROM $TABLE_NAME", null)
+        var tipoSerpiente = 0
+        if (cursor.moveToFirst()) {
+            tipoSerpiente = cursor.getInt(0)
+        }
+        cursor.close()
+        return tipoSerpiente
+    }
+
     fun obtenernombre(): String {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT nombre FROM $TABLE_NAME", null)
@@ -134,6 +152,7 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         cursor.close()
         return tipoSerpiente
     }
+
 
     // Métodos para obtener valores (GET)
     fun obtenerRealizadoPedido(): String {
@@ -202,23 +221,31 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         return tipoUsuario
     }
 
-    fun obtenerLatitud(): String {
+    fun obtenerLatitud(): Float {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT latitud FROM $TABLE_NAME", null)
-        var latitud = ""
-        if (cursor.moveToFirst()) {
-            latitud = cursor.getString(0)
+        var latitud = 0.0f // Cambiar a tipo Float
+
+        try {
+            if (cursor.moveToFirst()) {
+                latitud = cursor.getFloat(0) // Obtener el valor de latitud como Float
+            }
+        } catch (e: Exception) {
+            e.printStackTrace() // Para capturar cualquier excepción si ocurre
+        } finally {
+            cursor.close() // Asegurarse de cerrar el cursor
         }
-        cursor.close()
+
         return latitud
     }
 
-    fun obtenerLongitud(): String {
+
+    fun obtenerLongitud(): Float {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT longitud FROM $TABLE_NAME", null)
-        var longitud = ""
+        var longitud = 0.0f
         if (cursor.moveToFirst()) {
-            longitud = cursor.getString(0)
+            longitud = cursor.getFloat(0)
         }
         cursor.close()
         return longitud

@@ -66,7 +66,8 @@ class NuevoRegistro: AppCompatActivity() {
                 && email.isNotEmpty() && phone.isNotEmpty() && direccion.isNotEmpty() &&
                 password1.isNotEmpty() && password2.isNotEmpty()){
                 if (password1 == password2) {  // Asegúrate de que las contraseñas coinciden
-                    val nuevoCliente = Clientes(1, name, fullName, direccion, phone, email, password1)
+                    val ubicacion = Ubicacion(0.0,0.0,false,false)
+                    val nuevoCliente = Clientes(1, name, fullName, direccion, phone, email, password1,ubicacion)
 
                     // Llamada a la API para registrar al cliente
                     RetrofitClient.instance.registrarCliente(nuevoCliente).enqueue(object :
