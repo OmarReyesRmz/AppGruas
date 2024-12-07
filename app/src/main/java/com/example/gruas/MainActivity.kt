@@ -78,20 +78,62 @@
 
 
 
-        private fun comprobarcliente(conductores: List<Clientes>, Email: String, Password: String){
+        private fun comprobarcliente(clientes: List<Clientes>, Email: String, Password: String){
             //No hay nada
             if(Email.isEmpty() || Password.isEmpty()) {
                 // Mostrar una ventana emergente si los campos están vacíos
                 showCustomDialog("Por favor, llena ambos campos antes de continuar.")
                 return
             }
+            for (cliente in clientes) {
+                if(Email == cliente.email){
+                    if(Password == cliente.password){
+                        //Contraseña e Email correctos
+                        // Inicia la otra actividad
+                        val intent = Intent(this, PedirGrua::class.java)
+                        intent.putExtra("nombre", cliente.email)
+                        startActivity(intent)
+                        finish()
+                        return
+                    }else{
+                        // Se equivo de contraseña pero no email
+                        // Mostrar una ventana emergente si los campos están vacíos
+                        showCustomDialog("La contraseña que ingresaste no es correcta. ¿Quieres intentarlo de nuevo?")
+                        return
+                    }
+                }
+            }
+            // Se equivoco en el email, no existe o es un conductores
+            RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
+                override fun onResponse(
+                    call: Call<List<Conductores>>,
+                    response: Response<List<Conductores>>
+                ) {
+                    if (response.isSuccessful) {
+                        val conductores = response.body()
+                        conductores?.let {
+                            comprobarconductor(it,Email, Password)
+                        }
+                    } else {
+                        Toast.makeText(this@MainActivity, "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                    Toast.makeText(this@MainActivity, "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+
+
+        private fun comprobarconductor(conductores: List<Conductores>,Email: String, Password: String){
             for (conductor in conductores) {
                 if(Email == conductor.email){
                     if(Password == conductor.password){
                         //Contraseña e Email correctos
                         // Inicia la otra actividad
                         val intent = Intent(this, PedirGrua::class.java)
-                        intent.putExtra("nombre", conductor.nombre)
+                        intent.putExtra("nombre", conductor.email)
                         startActivity(intent)
                         finish()
                         return
@@ -104,9 +146,10 @@
                 }
             }
             // Se equivoco en el email, no existe
-            // Mostrar una ventana emergente si los campos están vacíos
             showCustomDialog("Este email no existe en nuestros registros.")
         }
+
+
 
         private fun showCustomDialog(message: String, onButtonClick: (() -> Unit)? = null) {
             val dialogView = layoutInflater.inflate(R.layout.dialog_alert, null)
