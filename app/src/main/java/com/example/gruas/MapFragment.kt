@@ -116,7 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
-                        Log.d("Hola","Estoy aqui entre")
+                        //Log.d("Hola","Estoy aqui entre")
                         actualizardestinationLatLng(newLatLng)
                     }else{
                         updateLocationOnMap(newLatLng)
@@ -130,9 +130,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         map.clear()  // Limpiar el mapa antes de agregar nuevas ubicaciones
         map.addMarker(MarkerOptions().position(latLng).title("Mi ubicación"))
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
-        Log.d("Hola","estoy actualizando las hubicaciones")
+        //Log.d("Hola","estoy actualizando las hubicaciones")
         // Verificar si el destino ha sido actualizado
         if (isDestinationUpdated) {
+            //Log.d("Hola","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
             getDirections(latLng, destinationLatLng)
         }
@@ -172,15 +173,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         updateLocationOnMap(latLng)
                     }
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
-                    //si es conductor
-                    Log.d("Hola", "sigo aqui")
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
                     LeerClientes()
-                }else{
-                    Log.d("Hola", "${db.obtenerid()}  ${conductor.id}")
+                    return
                 }
-                break
             }
         }
     }
@@ -279,10 +276,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         for (conductor in conductores) {
             if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
                 //actualizar solicitud aceptada
-                Log.d("Hola","$id cliente")
+                //Log.d("Hola","$id cliente")
                 ActualizarSolicitudAceptada(conductor.id)
                 band = conductor.id
-                Log.d("Hola","$id cliente sali ya esta aceptada")
+                //Log.d("Hola","$id cliente sali ya esta aceptada")
                 break;
             }
         }
@@ -297,12 +294,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             //Log.d("Hola","$id - ${conductor.solicitud.usuario}, ${conductor.aceptada}")
             if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
-                Log.d("Hola","Antes de entrar")
+                //Log.d("Hola","Antes de entrar")
                 ActualizarDestinationUbication(id,lntlng)
-                Log.d("Hola","despues de entrar")
-
+                //Log.d("Hola","despues de entrar")
                 break
-                Log.d("Hola","llegue aqui")
             }
         }
     }
@@ -344,7 +339,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         for(clientes in it){
                             //Log.d("Hola","id cliente $id entre")
                             if(clientes.id == id){
-                                //Log.d("Hola","Actualizada $id")
+                                //Log.d("Hola","Actualizada ${clientes.ubicacion.latitud} - ${clientes.ubicacion.longitud} //// ${lntlng.longitude} - ${lntlng.latitude}")
                                 destinationLatLng = LatLng(clientes.ubicacion.latitud.toDouble(), clientes.ubicacion.longitud.toDouble())
                                 isDestinationUpdated = true
                                 updateLocationOnMap(lntlng)
