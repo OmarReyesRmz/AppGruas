@@ -1,10 +1,12 @@
 package com.example.gruas
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 
@@ -49,13 +51,13 @@ class ProfileFragment : Fragment() {
         val Telefono: EditText = view.findViewById(R.id.editTextTelefono)
         Telefono.setText(db.obtenerTelefono())
 
-        //val CerrarSesion: Button = view.findViewById(R.id.exit)
-        //CerrarSesion.SetOnClickListener{
-        //db.actualizarlogeado("NO")
-        //val intent = Intent(requireContext(), MainActivity::class.java)
-        //startactivity(intent)
-        //finish()
-        //}
+        val CerrarSesion: Button = view.findViewById(R.id.cerrar)
+        CerrarSesion.setOnClickListener{
+        db.actualizarlogeado("NO")
+        val intent = Intent(requireContext(), MainActivity::class.java)
+        startActivity(intent)
+        requireActivity().finish()
+        }
 
         return view
     }

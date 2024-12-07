@@ -116,6 +116,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
+                        Log.d("Hola","Estoy aqui entre")
                         actualizardestinationLatLng(newLatLng)
                     }else{
                         updateLocationOnMap(newLatLng)
@@ -129,6 +130,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         map.clear()  // Limpiar el mapa antes de agregar nuevas ubicaciones
         map.addMarker(MarkerOptions().position(latLng).title("Mi ubicación"))
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        Log.d("Hola","estoy actualizando las hubicaciones")
         // Verificar si el destino ha sido actualizado
         if (isDestinationUpdated) {
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
@@ -171,9 +173,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     }
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     //si es conductor
+                    Log.d("Hola", "sigo aqui")
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
                     LeerClientes()
+                }else{
+                    Log.d("Hola", "${db.obtenerid()}  ${conductor.id}")
                 }
                 break
             }
@@ -191,7 +196,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             activo = true,
             atendido = atendido,
             espera = espera,
-            usuario = id
+            usuario = idcliente
         )
 
         val call = RetrofitClient.instance.actualizarConductores(id, conductor)
@@ -270,29 +275,63 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun comprobarconductores2(conductores: List<Conductores>, id: Int){
+        var band = 10000000
         for (conductor in conductores) {
-            if(!conductor.aceptada && conductor.solicitud.espera){
+            if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
                 //actualizar solicitud aceptada
+                Log.d("Hola","$id cliente")
+                ActualizarSolicitudAceptada(conductor.id)
+                band = conductor.id
+                Log.d("Hola","$id cliente sali ya esta aceptada")
                 break;
             }
         }
+
         for(conductor in conductores){
-            if(!conductor.aceptada && !conductor.solicitud.espera){
+            if(!conductor.aceptada && conductor.solicitud.espera && conductor.ubicacion.activo && band != conductor.id){
                 actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
             }
         }
 
         for(conductor in conductores){
-            if(conductor.solicitud.usuario == id && conductor.aceptada){
+            //Log.d("Hola","$id - ${conductor.solicitud.usuario}, ${conductor.aceptada}")
+            if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
-                ActualizarDestinationUbication(id)
-                isDestinationUpdated = true
-                updateLocationOnMap(lntlng)
+                Log.d("Hola","Antes de entrar")
+                ActualizarDestinationUbication(id,lntlng)
+                Log.d("Hola","despues de entrar")
+
+                break
+                Log.d("Hola","llegue aqui")
             }
         }
     }
 
-    fun ActualizarDestinationUbication(id: Int){
+    fun ActualizarSolicitudAceptada(id: Int){
+        val aceptada = ActualizarAceptadaRequest(
+            aceptada = true
+        )
+        val call = RetrofitClient.instance.actualizarAceptada(id,aceptada)
+
+        call.enqueue(object : Callback<Conductores> {
+            override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
+                if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    Log.d("Aceptada", "Conductor actualizado exitosamente")
+                } else {
+                    // Manejar el error si la respuesta no es exitosa
+                    Log.e("Aceptada", "Error al actualizar el cliente: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Conductores>, t: Throwable) {
+                // Manejar errores de red o problemas con Retrofit
+                Log.e("Aceptada", "Error de red o conexión: ${t.message}")
+            }
+        })
+    }
+
+    fun ActualizarDestinationUbication(id: Int,lntlng:LatLng){
         RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(
                 call: Call<List<Clientes>>,
@@ -301,9 +340,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (response.isSuccessful) {
                     val clientes = response.body()
                     clientes?.let {
+                        //Log.d("Hola","id cliente $id")
                         for(clientes in it){
+                            //Log.d("Hola","id cliente $id entre")
                             if(clientes.id == id){
+                                //Log.d("Hola","Actualizada $id")
                                 destinationLatLng = LatLng(clientes.ubicacion.latitud.toDouble(), clientes.ubicacion.longitud.toDouble())
+                                isDestinationUpdated = true
+                                updateLocationOnMap(lntlng)
                                 break
                             }
                         }

@@ -29,8 +29,9 @@ interface ApiService {
     @PUT("actualizar-aceptada/conductores/{id}")
     fun actualizarAceptada(
         @Path("id") id: Int,
-        @Body aceptada: Boolean
+        @Body request: ActualizarAceptadaRequest
     ): Call<Conductores>
+
 
     @POST("Registrar-Cliente/")
     fun registrarCliente(@Body cliente: Clientes): Call<Clientes>

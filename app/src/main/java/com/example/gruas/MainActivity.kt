@@ -154,6 +154,7 @@
                         db.actualizarapellidos(conductor.apellido)
                         db.actualizardireccion(conductor.direccion)
                         db.actualizartelefono(conductor.telefono)
+                        db.actualizarid(conductor.id)
                         db.actualizarlogeado("SI")
                         db.actualizartipo_usuario("conductor")
                         startActivity(intent)

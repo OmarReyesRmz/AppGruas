@@ -206,6 +206,13 @@
                         android:textSize="15sp"
                         android:enabled="false" />
 
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/cerrar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CERRAR SESION"
+                        />
+
 
                 </LinearLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
