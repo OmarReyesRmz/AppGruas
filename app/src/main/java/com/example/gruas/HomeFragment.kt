@@ -35,9 +35,7 @@ class HomeFragment : Fragment() {
 
         val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
         callCraneButton.setOnClickListener {
-            // Iniciar la actividad MapaActivity
-            val intent = Intent(requireContext(), Mapa::class.java)
-            startActivity(intent)
+            navigateToMapFragment()
         }
 
         return view
@@ -107,6 +105,17 @@ class HomeFragment : Fragment() {
                 // No se seleccionó nada
             }
         }
+    }
+
+    private fun navigateToMapFragment() {
+        // Crear una instancia del fragmento del mapa
+        val mapFragment = MapFragment()
+
+        // Realizar la transición
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.Fragment_map, mapFragment) // R.id.fragment_container es el contenedor en tu layout principal
+            .addToBackStack(null) // Para permitir regresar al fragmento anterior
+            .commit()
     }
 
     companion object {
