@@ -3,15 +3,14 @@
 
     <item android:title="Home"
         android:id="@+id/Home"
-        android:icon="@drawable/baseline_home_24"
-        />
+        android:icon="@drawable/baseline_home_24" />
+    <item android:title="Map"
+        android:id="@+id/Map"
+        android:icon="@drawable/baseline_navigation_24"/>
     <item android:title="Profile"
         android:id="@+id/Profile"
         android:icon="@drawable/baseline_person_24"/>
     <item android:title="Settings"
         android:id="@+id/Settings"
         android:icon="@drawable/baseline_settings_24"/>
-    <item android:title="Map"
-        android:id="@+id/Map"
-        android:icon="@drawable/baseline_navigation_24"/>
 </menu>
