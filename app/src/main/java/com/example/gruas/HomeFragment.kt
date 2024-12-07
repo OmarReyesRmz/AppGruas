@@ -35,7 +35,11 @@ class HomeFragment : Fragment() {
 
         val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
         callCraneButton.setOnClickListener {
-            navigateToMapFragment()
+            try {
+                navigateToMapFragment()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         return view
@@ -108,14 +112,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToMapFragment() {
-        // Crear una instancia del fragmento del mapa
-        val mapFragment = MapFragment()
-
-        // Realizar la transición
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.Fragment_map, mapFragment) // R.id.fragment_container es el contenedor en tu layout principal
-            .addToBackStack(null) // Para permitir regresar al fragmento anterior
-            .commit()
+        // Verifica si el FragmentManager está disponible
+        if (parentFragmentManager != null) {
+            val mapFragment = MapFragment()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.Fragment_map, mapFragment) // Reemplaza con el ID correcto del contenedor
+                .addToBackStack(null) // Para permitir regresar al fragmento anterior
+                .commit()
+        } else {
+            // Manejo de errores si el FragmentManager no está disponible
+            throw IllegalStateException("FragmentManager no disponible")
+        }
     }
 
     companion object {
