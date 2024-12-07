@@ -41,7 +41,7 @@ class ProfileFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
         db = DBsqlite(requireContext())
         val Nombre: TextView = view.findViewById(R.id.Nombre)
-        Nombre.text =  db.obtenerApellidos() + "\n" + db.obtenernombre() 
+        Nombre.text =  db.obtenerApellidos() + "\n" + db.obtenernombre()
         val Correo: EditText = view.findViewById(R.id.editTextEmail)
         Correo.setText(db.obtenerCorreo())
         val Direccion: EditText = view.findViewById(R.id.editTextDireccion)
