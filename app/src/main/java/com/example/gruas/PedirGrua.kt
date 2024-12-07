@@ -38,7 +38,13 @@ class PedirGrua : AppCompatActivity() {
                     loadFragment(SettingsFragment())
                     true
                 }
-                else -> false
+                R.id.Map -> {
+                    loadFragment(MapFragment()) // Carga el MapFragment
+                    true
+                }
+                else -> {
+                    false
+                }
             }
         }
 
