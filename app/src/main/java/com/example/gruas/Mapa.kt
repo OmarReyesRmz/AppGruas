@@ -19,11 +19,12 @@ class Mapa : FragmentActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    private lateinit var db: DBsqlite
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mapauser)
-
+        db = DBsqlite(this)
         // Inicializar el cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -73,6 +74,8 @@ class Mapa : FragmentActivity(), OnMapReadyCallback {
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
                 val currentLatLng = LatLng(location.latitude, location.longitude)
+                db.actualizarlatitud(location.latitude.toString())
+                db.actualizarlongitud(location.longitude.toString())
                 map.addMarker(MarkerOptions().position(currentLatLng).title("Mi ubicación"))
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
             }

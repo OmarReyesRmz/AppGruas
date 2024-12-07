@@ -1,0 +1,239 @@
+package com.example.gruas
+
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import java.util.Vector
+
+class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, DATABASE_VERSION){
+    companion object{
+        val DATABASE_VERSION: Int = 1
+        val TABLE_NAME: String = "datos"
+    }
+
+    override fun onCreate(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE $TABLE_NAME (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "realizado_pedido TEXT NOT NULL," +          // Para identificar en qué nivel va
+                    "nombre TEXT NOT NULL," +
+                    "apellidos TEXT NOT NULL," +          // Para identificar en qué mundo va
+                    "telefono TEXT NOT NULL," +
+                    "correo TEXT NOT NULL," +   // 1 para true (sí es la primera vez), 0 para false
+                    "direccion TEXT NOT NULL," +  // Dinero acumulado
+                    "tipo_usuario TEXT NOT NULL," +      // Tipo de serpiente elegida por el jugador
+                    "latitud TEXT NOT NULL," +
+                    "longitud TEXT NOT NULL," +
+                    "logeado TEXT NOT NULL" +
+                    ")"
+        )
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        //En caso de una nueva version haria que actualizar las tablas
+    }
+
+    override fun onDowngrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        //En caso de regresar a una version anterior que habria que actualizar las tablas
+    }
+
+    fun datosExistentes(): Boolean {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT COUNT(*) FROM $TABLE_NAME", null)
+
+        var existe = false
+        if (cursor.moveToFirst()) {
+            existe = cursor.getInt(0) > 0 // Si COUNT(*) es mayor a 0, significa que hay datos
+        }
+
+        cursor.close() // Cierra el cursor para liberar recursos
+        return existe // Devuelve true si hay datos, false si no
+    }
+
+
+    fun guardarDatos(realizado_pedido: String, nombre: String, apellidos: String,
+                     telefono: String, correo: String, direccion: String,
+                     tipo_usuario: String, latitud: String, longitud: String, logeado:String){
+        val db = writableDatabase
+        db.execSQL(
+            "INSERT INTO $TABLE_NAME (realizado_pedido, nombre, apellidos, telefono, correo, direccion, tipo_usuario, latitud, longitud,logeado\n ) " +
+                    "VALUES('$realizado_pedido', '$nombre', '$apellidos', '$telefono', '$correo', '$direccion', '$tipo_usuario', '$latitud', '$longitud', '$logeado')\n"
+        )
+
+    }
+
+    // Métodos para actualizar (SET)
+    fun actualizarrealizarpedido(primeravez: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET realizado_pedido = '$primeravez'")
+        db.close()
+    }
+
+    fun actualizarnombre(nivel: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET nombre = '$nivel'")
+        db.close()
+    }
+
+    fun actualizarapellidos(nivel_jugando: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET apellidos = '$nivel_jugando'")
+        db.close()
+    }
+
+    fun actualizartelefono(mundo: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET telefono = '$mundo'")
+        db.close()
+    }
+
+    fun actualizarcorreo(mundo_jugando: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET correo = '$mundo_jugando'")
+        db.close()
+    }
+
+    fun actualizardireccion(dineroTotal: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET direccion = '$dineroTotal'")
+        db.close()
+    }
+
+    fun actualizartipo_usuario(tipoSerpiente: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET tipo_usuario = '$tipoSerpiente'")
+        db.close()
+    }
+
+    fun actualizarlatitud(iman: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET latitud = '$iman'")
+        db.close()
+    }
+
+    fun actualizarlongitud(monedax5: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET longitud = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizarlogeado(monedax5: String) {
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET logeado = '$monedax5'")
+        db.close()
+    }
+
+    // Métodos para obtener valores (GET)
+    fun obtenernombre(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT nombre FROM $TABLE_NAME", null)
+        var tipoSerpiente = ""
+        if (cursor.moveToFirst()) {
+            tipoSerpiente = cursor.getString(0)
+        }
+        cursor.close()
+        return tipoSerpiente
+    }
+
+    // Métodos para obtener valores (GET)
+    fun obtenerRealizadoPedido(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT realizado_pedido FROM $TABLE_NAME", null)
+        var realizadoPedido = ""
+        if (cursor.moveToFirst()) {
+            realizadoPedido = cursor.getString(0)
+        }
+        cursor.close()
+        return realizadoPedido
+    }
+
+    fun obtenerApellidos(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT apellidos FROM $TABLE_NAME", null)
+        var apellidos = ""
+        if (cursor.moveToFirst()) {
+            apellidos = cursor.getString(0)
+        }
+        cursor.close()
+        return apellidos
+    }
+
+    fun obtenerTelefono(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT telefono FROM $TABLE_NAME", null)
+        var telefono = ""
+        if (cursor.moveToFirst()) {
+            telefono = cursor.getString(0)
+        }
+        cursor.close()
+        return telefono
+    }
+
+    fun obtenerCorreo(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT correo FROM $TABLE_NAME", null)
+        var correo = ""
+        if (cursor.moveToFirst()) {
+            correo = cursor.getString(0)
+        }
+        cursor.close()
+        return correo
+    }
+
+    fun obtenerDireccion(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT direccion FROM $TABLE_NAME", null)
+        var direccion = ""
+        if (cursor.moveToFirst()) {
+            direccion = cursor.getString(0)
+        }
+        cursor.close()
+        return direccion
+    }
+
+    fun obtenerTipoUsuario(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT tipo_usuario FROM $TABLE_NAME", null)
+        var tipoUsuario = ""
+        if (cursor.moveToFirst()) {
+            tipoUsuario = cursor.getString(0)
+        }
+        cursor.close()
+        return tipoUsuario
+    }
+
+    fun obtenerLatitud(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT latitud FROM $TABLE_NAME", null)
+        var latitud = ""
+        if (cursor.moveToFirst()) {
+            latitud = cursor.getString(0)
+        }
+        cursor.close()
+        return latitud
+    }
+
+    fun obtenerLongitud(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT longitud FROM $TABLE_NAME", null)
+        var longitud = ""
+        if (cursor.moveToFirst()) {
+            longitud = cursor.getString(0)
+        }
+        cursor.close()
+        return longitud
+    }
+
+    fun obtenerLogeado(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT logeado FROM $TABLE_NAME", null)
+        var logeado = ""
+        if (cursor.moveToFirst()) {
+            logeado = cursor.getString(0)
+        }
+        cursor.close()
+        return logeado
+    }
+
+
+}

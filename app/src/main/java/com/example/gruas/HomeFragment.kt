@@ -11,8 +11,11 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.appcompat.widget.AppCompatButton
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeFragment : Fragment() {
+
+    private lateinit var db: DBsqlite
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,20 +29,16 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-
+        db = DBsqlite(requireContext())
         // Configurar los Spinners
         setupSpinners(view)
 
         val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
         callCraneButton.setOnClickListener {
-            try {
-                navigateToMapFragment()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            navigateToMapFragment()
         }
 
         return view
@@ -112,17 +111,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToMapFragment() {
-        // Verifica si el FragmentManager está disponible
-        if (parentFragmentManager != null) {
-            val mapFragment = MapFragment()
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.Fragment_map, mapFragment) // Reemplaza con el ID correcto del contenedor
-                .addToBackStack(null) // Para permitir regresar al fragmento anterior
-                .commit()
-        } else {
-            // Manejo de errores si el FragmentManager no está disponible
-            throw IllegalStateException("FragmentManager no disponible")
-        }
+        // Obtén una referencia al BottomNavigationView
+        db.actualizarrealizarpedido("REALIZANDO")
+        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        // Simula un clic en el ítem de "Map" (R.id.Map)
+        bottomNavigationView?.selectedItemId = R.id.Map
     }
 
     companion object {

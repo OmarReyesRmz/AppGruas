@@ -23,6 +23,7 @@
         private lateinit var btnRegistrar: TextView
         private lateinit var EditTextEmial: EditText
         private lateinit var EditTextPassword: EditText
+        private lateinit var db: DBsqlite
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -32,13 +33,20 @@
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
             setContentView(R.layout.activity_login)
+            db = DBsqlite(this)
 
+            if(!db.datosExistentes()){
+                db.guardarDatos("NO","NIGUNO","NIGUNO","NIGUNO",
+                    "NIGUNO","NIGUNO","NIGUNO","NIGUNO","NIGUNO","NO")
+            }else if(db.obtenerLogeado() == "SI"){
+                val intent = Intent(this, PedirGrua::class.java)
+                startActivity(intent)
+                finish()
+            }
             EditTextEmial = findViewById(R.id.editTextEmail)
             EditTextPassword = findViewById(R.id.editTextPassword)
             btnRegistrar = findViewById(R.id.NuevoRegistro)
             btnLogin = findViewById(R.id.ButtonLogin)
-
-
 
             btnLogin.setOnClickListener {
                 // Obtén los valores ingresados por el usuario
@@ -91,7 +99,13 @@
                         //Contraseña e Email correctos
                         // Inicia la otra actividad
                         val intent = Intent(this, PedirGrua::class.java)
-                        intent.putExtra("nombre", cliente.email)
+                        db.actualizarnombre(cliente.nombre)
+                        db.actualizarcorreo(cliente.email)
+                        db.actualizarapellidos(cliente.apellido)
+                        db.actualizardireccion(cliente.direccion)
+                        db.actualizartelefono(cliente.telefono)
+                        db.actualizarlogeado("SI")
+                        db.actualizartipo_usuario("cliente")
                         startActivity(intent)
                         finish()
                         return
@@ -103,6 +117,7 @@
                     }
                 }
             }
+
             // Se equivoco en el email, no existe o es un conductores
             RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
                 override fun onResponse(
@@ -133,7 +148,13 @@
                         //Contraseña e Email correctos
                         // Inicia la otra actividad
                         val intent = Intent(this, PedirGrua::class.java)
-                        intent.putExtra("nombre", conductor.email)
+                        db.actualizarnombre(conductor.nombre)
+                        db.actualizarcorreo(conductor.email)
+                        db.actualizarapellidos(conductor.apellido)
+                        db.actualizardireccion(conductor.direccion)
+                        db.actualizartelefono(conductor.telefono)
+                        db.actualizarlogeado("SI")
+                        db.actualizartipo_usuario("conductor")
                         startActivity(intent)
                         finish()
                         return
