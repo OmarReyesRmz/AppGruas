@@ -168,7 +168,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if(db.obtenerTipoUsuario() == "cliente"){
                     destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
                     isDestinationUpdated = true  // Marcamos que el destino ha sido actualizado
-                    actualizarCliente(db.obtenerid(),conductor.ubicacion.latitud,conductor.ubicacion.longitud)
+                    actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         updateLocationOnMap(latLng)
                     }
