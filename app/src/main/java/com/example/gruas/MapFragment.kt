@@ -72,7 +72,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         checkLocationPermissionAndGetLocation()
-
         // Comenzamos el ciclo de actualización de posiciones
         handler.post(updateRunnable)
     }
@@ -108,7 +107,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 val newLatLng = LatLng(location.latitude, location.longitude)
                 if (currentLatLng == null || currentLatLng != newLatLng) {
                     currentLatLng = newLatLng
-
+                    Log.d("Hola","Estoy aqui entre324")
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
@@ -116,13 +115,15 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
-                        //Log.d("Hola","Estoy aqui entre")
+                        Log.d("Hola","Estoy aqui entre")
                         actualizardestinationLatLng(newLatLng)
                     }else{
                         updateLocationOnMap(newLatLng)
                     }
                 }
             }
+        }.addOnFailureListener { exception ->
+            Log.e("LocationError", "Error al obtener la ubicación: ${exception.message}")
         }
     }
 
