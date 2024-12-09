@@ -6,9 +6,11 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -167,16 +169,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         for (conductor in conductores) {
             if (conductor.ubicacion.activo && !conductor.ubicacion.atendido) {
                 if(db.obtenerTipoUsuario() == "cliente"){
-                    destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
-                    isDestinationUpdated = true  // Marcamos que el destino ha sido actualizado
-                    actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
+                        destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
+                        isDestinationUpdated = true  // Marcamos que el destino ha sido actualizado
+                        actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true, conductor.id)
                         updateLocationOnMap(latLng)
+                    }else{
+                        actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,0)
                     }
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
-                    LeerClientes()
+                    if(conductor.aceptada){
+                        actualizarConductor(conductor.id,db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,true,conductor.solicitud.usuario,false)
+                    }else {
+                        LeerClientes()
+                    }
                     return
                 }
             }
@@ -266,7 +274,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     fun comprobarcliente(cliente: List<Clientes>){
         for(clientes in cliente){
-            if(clientes.ubicacion.atendido){
+            if(clientes.ubicacion.activo && !clientes.ubicacion.atendido){
                 mostrarpedido(clientes.id, clientes.nombre)
             }
         }
@@ -359,12 +367,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun actualizarCliente(id: Int, latitud: Double, longitud: Double) {
+    fun actualizarCliente(id: Int, latitud: Double, longitud: Double, Atendido: Boolean, Conductor: Int) {
         val cliente = ActualizarDatosClientes(
             latitud = latitud,
             longitud = longitud,
             activo = true,
-            atendido = true
+            atendido = Atendido,
+            conductor = Conductor
         )
 
         val call = RetrofitClient.instance.actualizarCliente(id, cliente)
@@ -462,7 +471,19 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
         // Configura la animación del diálogo
-        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        dialog.window?.apply {
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL) // Posicionar arriba y centrado horizontalmente
+            attributes.y = 50 // Margen desde el borde superior (ajusta según necesites)
+            setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
+            WindowManager.LayoutParams.MATCH_PARENT // Ancho del diálogo (puedes usar WRAP_CONTENT)
+            WindowManager.LayoutParams.WRAP_CONTENT // Alto del diálogo
+            //setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            //setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000"))) // Fondo oscuro translúcido
+            setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+        }
+
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
 
         // Configura el mensaje y el botón
         val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)

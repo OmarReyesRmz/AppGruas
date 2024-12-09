@@ -1,8 +1,11 @@
     package com.example.gruas
 
     import android.content.Intent
+    import android.graphics.Color
+    import android.graphics.drawable.ColorDrawable
     import android.os.Bundle
     import android.util.Log
+    import android.view.Gravity
     import android.view.WindowManager
     import android.widget.AdapterView
     import android.widget.ArrayAdapter
@@ -179,7 +182,19 @@
             val dialog = android.app.AlertDialog.Builder(this).setView(dialogView).create()
 
             // Configura la animación del diálogo
-            dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+            dialog.window?.apply {
+                //setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL) // Posicionar arriba y centrado horizontalmente
+                //attributes.y = 50 // Margen desde el borde superior (ajusta según necesites)
+                setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
+                //WindowManager.LayoutParams.MATCH_PARENT // Ancho del diálogo (puedes usar WRAP_CONTENT)
+                //WindowManager.LayoutParams.WRAP_CONTENT // Alto del diálogo
+                //setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                //setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000"))) // Fondo oscuro translúcido
+                setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+            }
+
+            dialog.setCanceledOnTouchOutside(false)
+            dialog.setCancelable(false)
 
             // Configura el mensaje y el botón
             val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
@@ -200,6 +215,7 @@
 
             dialog.setOnDismissListener {
                 // Deshabilitar animaciones adicionales al cerrar
+                //Toast.makeText(this,"hola").show()
                 dialogButton.isEnabled = false
             }
 
