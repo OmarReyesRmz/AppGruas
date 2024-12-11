@@ -24,7 +24,13 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
                     "tipo_usuario TEXT NOT NULL," +      // Tipo de serpiente elegida por el jugador
                     "latitud FLOAT NOT NULL," +
                     "longitud FLOAT NOT NULL," +
-                    "logeado TEXT NOT NULL" +
+                    "logeado TEXT NOT NULL," +
+                    "ubicacion TEXT NOT NULL," +
+                    "tipodegrua TEXT NOT NULL," +
+                    "direcciondeenvio TEXT NOT NULL," +
+                    "modeloauto TEXT NOT NULL," +
+                    "placas TEXT NOT NULL," +
+                    "comentarios TEXT NOT NULL" +
                     ")"
         )
     }
@@ -53,11 +59,12 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
 
     fun guardarDatos(realizado_pedido: String, nombre: String, apellidos: String,
                      telefono: String, correo: String, direccion: String,
-                     tipo_usuario: String, latitud: Float, longitud: Float, logeado:String){
+                     tipo_usuario: String, latitud: Float, longitud: Float, logeado:String,
+                     ubicacion: String, tipodegrua: String, direcciondeenvio: String, modeloauto: String, placas: String, comentarios: String){
         val db = writableDatabase
         db.execSQL(
-            "INSERT INTO $TABLE_NAME (realizado_pedido, nombre, apellidos, telefono, correo, direccion, tipo_usuario, latitud, longitud,logeado\n ) " +
-                    "VALUES('$realizado_pedido', '$nombre', '$apellidos', '$telefono', '$correo', '$direccion', '$tipo_usuario', $latitud, $longitud, '$logeado')\n"
+            "INSERT INTO $TABLE_NAME (realizado_pedido, nombre, apellidos, telefono, correo, direccion, tipo_usuario, latitud, longitud,logeado,ubicacion,tipodegrua,direcciondeenvio,modeloauto,placas,comentarios\n ) " +
+                    "VALUES('$realizado_pedido', '$nombre', '$apellidos', '$telefono', '$correo', '$direccion', '$tipo_usuario', $latitud, $longitud, '$logeado', '$ubicacion', '$tipodegrua','$direcciondeenvio', '$modeloauto', '$placas', '$comentarios')\n"
         )
 
     }
@@ -130,6 +137,43 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         db.close()
     }
 
+    fun actualizarubicacion(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET ubicacion = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizartipodegrua(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET tipodegrua = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizardirecciondeenvio(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET direcciondeenvio = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizarmodeloauto(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET modeloauto = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizarplacas(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET placas = '$monedax5'")
+        db.close()
+    }
+
+    fun actualizarcomentarios(monedax5: String){
+        val db = writableDatabase
+        db.execSQL("UPDATE $TABLE_NAME SET comentarios = '$monedax5'")
+        db.close()
+    }
+
+    
     // Métodos para obtener valores (GET)
     fun obtenerid(): Int {
         val db = readableDatabase
@@ -261,6 +305,74 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         cursor.close()
         return logeado
     }
+
+    fun obtenerUbicacion(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT ubicacion FROM $TABLE_NAME", null)
+        var ubicacion = ""
+        if (cursor.moveToFirst()) {
+            ubicacion = cursor.getString(0)
+        }
+        cursor.close()
+        return ubicacion
+    }
+
+    fun obtenerTipodegrua(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT tipodegrua FROM $TABLE_NAME", null)
+        var tipodegrua = ""
+        if (cursor.moveToFirst()) {
+            tipodegrua = cursor.getString(0)
+        }
+        cursor.close()
+        return tipodegrua
+    }
+
+    fun obtenerDirecciondeenvio(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT direcciondeenvio FROM $TABLE_NAME", null)
+        var direcciondeenvio = ""
+        if (cursor.moveToFirst()) {
+            direcciondeenvio = cursor.getString(0)
+        }
+        cursor.close()
+        return direcciondeenvio
+    }
+
+    fun obtenerModeloauto(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT modeloauto FROM $TABLE_NAME", null)
+        var modeloauto = ""
+        if (cursor.moveToFirst()) {
+            modeloauto = cursor.getString(0)
+        }
+        cursor.close()
+        return modeloauto
+    }
+
+    fun obtenerPlacas(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT placas FROM $TABLE_NAME", null)
+        var placas = ""
+        if (cursor.moveToFirst()) {
+            placas = cursor.getString(0)
+        }
+        cursor.close()
+        return placas
+    }
+
+    fun obtenerComentarios(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT comentarios FROM $TABLE_NAME", null)
+        var comentarios = ""
+        if (cursor.moveToFirst()) {
+            comentarios = cursor.getString(0)
+        }
+        cursor.close()
+        return comentarios
+    }
+
+
 
 
 }
