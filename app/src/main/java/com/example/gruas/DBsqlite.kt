@@ -173,7 +173,7 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         db.close()
     }
 
-    
+
     // Métodos para obtener valores (GET)
     fun obtenerid(): Int {
         val db = readableDatabase
@@ -371,8 +371,4 @@ class DBsqlite(context: Context?): SQLiteOpenHelper(context, TABLE_NAME, null, D
         cursor.close()
         return comentarios
     }
-
-
-
-
 }
