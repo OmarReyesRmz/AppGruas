@@ -1,6 +1,7 @@
 package com.example.gruas
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -44,6 +45,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var destinationLatLng = LatLng(0.0, 0.0)
     private var currentLatLng: LatLng? = null
     private var isDestinationUpdated = false
+    private lateinit var clientes_pasados: List<Clientes>
 
     private val handler = Handler()
     private val updateRunnable = object : Runnable {
@@ -51,6 +53,37 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             // Actualizamos la ubicación del usuario y destino cada 1 segundo
             getMyLocation()
             handler.postDelayed(this, 1000) // Repite cada 1 segundo
+        }
+    }
+
+    private val updateRunnable2 = object : Runnable {
+        override fun run() {
+            RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
+                override fun onResponse(
+                    call: Call<List<Clientes>>,
+                    response: Response<List<Clientes>>
+                ) {
+                    if (response.isSuccessful) {
+                        val clientes = response.body()
+                        clientes?.let {
+                            if(clientes_pasados != it) {
+                                comprobarcliente(it)
+                                clientes_pasados = it
+                                Log.d("Hola","hubo un cambios")
+                            }else{
+                                Log.d("Hola","no hay cambios")
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                    Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+            handler.postDelayed(this,1000)
         }
     }
 
@@ -109,7 +142,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 val newLatLng = LatLng(location.latitude, location.longitude)
                 if (currentLatLng == null || currentLatLng != newLatLng) {
                     currentLatLng = newLatLng
-                    Log.d("Hola","Estoy aqui entre324")
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
@@ -117,7 +149,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
-                        Log.d("Hola","Estoy aqui entre")
+                        Log.d("Hola", "entre a la funcion actualizardestinationLatLng")
                         actualizardestinationLatLng(newLatLng)
                     }else{
                         updateLocationOnMap(newLatLng)
@@ -167,7 +199,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun comprobarconductor(conductores: List<Conductores>, latLng: LatLng) {
         for (conductor in conductores) {
-            if (conductor.ubicacion.activo && !conductor.ubicacion.atendido) {
+            //Log.d("Hola", "${conductor.id} - ${db.obtenerid()} - ${db.obtenerTipoUsuario()}")
+            if (conductor.ubicacion.activo) {
                 if(db.obtenerTipoUsuario() == "cliente"){
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
@@ -181,8 +214,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
                     if(conductor.aceptada){
+                        //Log.d("Hola", "Ya acepte un pedido estoy en viaje")
                         actualizarConductor(conductor.id,db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,true,conductor.solicitud.usuario,false)
+                        val lntlng2 = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
+                        //Log.d("Hola", "Estoy pasando para actualizar la ubicacion del conductor2")
+                        ActualizarDestinationUbication(conductor.solicitud.usuario,lntlng2)
                     }else {
+                        Log.d("Hola", "No paso")
                         LeerClientes()
                     }
                     return
@@ -193,6 +231,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     fun mostrarpedido(id: Int, nombre: String){
         showCustomDialog("estan solicitando un servicio el cliente $nombre",id)
+
     }
 
     fun actualizarConductor(id: Int, latitud: Double, longitud: Double, espera: Boolean, atendido: Boolean, idcliente: Int, Bandera: Boolean) {
@@ -260,6 +299,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val clientes = response.body()
                     clientes?.let {
                         comprobarcliente(it)
+                        clientes_pasados = it
+                        handler.post(updateRunnable2)
                     }
                 } else {
                     Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
@@ -276,6 +317,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         for(clientes in cliente){
             if(clientes.ubicacion.activo && !clientes.ubicacion.atendido){
                 mostrarpedido(clientes.id, clientes.nombre)
+                return
             }
         }
     }
@@ -321,6 +363,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
                     // La actualización fue exitosa, puedes manejar la respuesta
+                    handler.removeCallbacks(updateRunnable2)
                     Log.d("Aceptada", "Conductor actualizado exitosamente")
                 } else {
                     // Manejar el error si la respuesta no es exitosa
@@ -465,21 +508,29 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         super.onDestroy()
         handler.removeCallbacks(updateRunnable)  // Detener las actualizaciones cuando se destruye el fragmento
     }
+    // Agrega una propiedad estática a la clase para manejar diálogos globalmente
+    companion object {
+        private var currentDialog: AlertDialog? = null
+    }
 
-    private fun showCustomDialog(message: String,id: Int, onButtonClick: (() -> Unit)? = null) {
+    private fun showCustomDialog(message: String, id: Int, onButtonClick: (() -> Unit)? = null) {
+        // Cerrar cualquier diálogo existente antes de crear uno nuevo
+        currentDialog?.dismiss()
+
         val dialogView = layoutInflater.inflate(R.layout.dialog_alert, null)
         val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
+        // Almacenar la referencia al diálogo actual
+        currentDialog = dialog
+
         // Configura la animación del diálogo
         dialog.window?.apply {
-            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL) // Posicionar arriba y centrado horizontalmente
-            attributes.y = 50 // Margen desde el borde superior (ajusta según necesites)
-            setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
-            WindowManager.LayoutParams.MATCH_PARENT // Ancho del diálogo (puedes usar WRAP_CONTENT)
-            WindowManager.LayoutParams.WRAP_CONTENT // Alto del diálogo
-            //setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            //setBackgroundDrawable(ColorDrawable(Color.parseColor("#80000000"))) // Fondo oscuro translúcido
-            setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+            attributes.y = 50
+            setWindowAnimations(R.style.DialogAnimation)
+            WindowManager.LayoutParams.MATCH_PARENT
+            WindowManager.LayoutParams.WRAP_CONTENT
+            setDimAmount(0.6f)
         }
 
         dialog.setCanceledOnTouchOutside(false)
@@ -492,19 +543,29 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         dialogMessage.text = message
 
         dialogButton.setOnClickListener {
-            // Deshabilitar el botón inmediatamente
             dialogButton.isEnabled = false
-            actualizarConductor(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(), true, false, id,true)
-            // Ejecutar la acción personalizada solo una vez
+            actualizarConductor(
+                db.obtenerid(),
+                db.obtenerLatitud().toDouble(),
+                db.obtenerLongitud().toDouble(),
+                true,
+                false,
+                id,
+                true
+            )
             onButtonClick?.invoke()
 
-            // Cerrar el diálogo después de un pequeño retraso para asegurar que no se active de nuevo
+            // Limpiar la referencia al diálogo actual
+            currentDialog = null
             dialog.dismiss()
         }
 
         dialog.setOnDismissListener {
-            // Deshabilitar animaciones adicionales al cerrar
             dialogButton.isEnabled = false
+            // Limpiar la referencia al diálogo actual
+            if (currentDialog == dialog) {
+                currentDialog = null
+            }
         }
 
         dialog.show()
