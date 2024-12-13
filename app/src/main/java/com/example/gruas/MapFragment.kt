@@ -2,8 +2,11 @@ package com.example.gruas
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -12,7 +15,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -47,6 +52,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var isDestinationUpdated = false
     private lateinit var clientes_pasados: List<Clientes>
     private lateinit var conductores_pasados: Conductores
+    private var currentDialog2: Dialog? = null
 
     private val handler = Handler()
     private val updateRunnable = object : Runnable {
@@ -176,6 +182,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (currentLatLng == null || currentLatLng != newLatLng) {
                     currentLatLng = newLatLng
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
+                        cargadepantalla()
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
                         actualizardestinationLatLng(newLatLng)
@@ -234,11 +241,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             if (conductor.ubicacion.activo) {
                 if(db.obtenerTipoUsuario() == "cliente"){
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
-                        destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
+                        val latLng2 = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
+                        destinationLatLng = latLng
                         isDestinationUpdated = true
                         handler.removeCallbacks(updateRunnable3)
+                        currentDialog2?.dismiss()
+                        currentDialog2 = null
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true, conductor.id)
-                        updateLocationOnMap(latLng)
+                        updateLocationOnMap(latLng2)
                     }else{
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,0)
                     }
@@ -539,6 +549,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(updateRunnable)  // Detener las actualizaciones cuando se destruye el fragmento
+        handler.removeCallbacks(updateRunnable2)
+        handler.removeCallbacks(updateRunnable3)
     }
 
     companion object {
@@ -602,4 +614,33 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         dialog.show()
     }
+
+    private fun cargadepantalla(onButtonClick: (() -> Unit)? = null) {
+        // Infla el diseño del diálogo
+        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_waiting, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+
+        // Configura la animación del diálogo
+        dialog.window?.apply {
+            setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
+            setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+            setBackgroundDrawable(ColorDrawable(Color.parseColor("#00000000")))
+        }
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
+
+        // Encuentra la vista que girará dentro de `dialogView`
+        val rotatingView = dialogView.findViewById<ImageView>(R.id.dialog_icon) // Cambiado a `dialogView`
+        if (rotatingView != null) {
+            val rotateAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.dialog_animation_infinite)
+            rotatingView.startAnimation(rotateAnimation)
+        } else {
+            // Si no se encuentra la vista, puedes manejarlo con un log o excepción
+            Log.e("DialogError", "No se encontró el elemento con ID dialog_icon en el diseño del diálogo.")
+        }
+
+        dialog.show()
+        currentDialog2 = dialog
+    }
+
 }
