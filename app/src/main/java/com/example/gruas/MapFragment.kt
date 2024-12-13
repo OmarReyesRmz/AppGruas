@@ -50,9 +50,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var destinationLatLng = LatLng(0.0, 0.0)
     private var currentLatLng: LatLng? = null
     private var isDestinationUpdated = false
+    private var banderapaso = false
     private lateinit var clientes_pasados: List<Clientes>
-    private lateinit var conductores_pasados: Conductores
+    private lateinit var conductores_pasados: List<Conductores>
     private var currentDialog2: Dialog? = null
+    private var bandera_pedido_terminado = 0
 
     private val handler = Handler()
     private val updateRunnable = object : Runnable {
@@ -125,13 +127,49 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private val updateRunnable4 = object : Runnable {
+        override fun run() {
+            RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
+                override fun onResponse(
+                    call: Call<List<Conductores>>,
+                    response: Response<List<Conductores>>
+                ) {
+                    if (response.isSuccessful) {
+                        val conductores = response.body()
+                        conductores?.let {
+                            for (conductor in it){
+                                Log.d("Prueba","${conductor.aceptada} - ${conductor.solicitud.usuario} - ${conductor.solicitud.espera}")
+                                if(conductor.aceptada == false && conductor.solicitud.usuario != 0 && !conductor.solicitud.espera) {
+                                    Log.d("Prueba","Runnable4")
+                                    val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
+                                    ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
+                                    LeerClientes2(true,conductor.solicitud.usuario)
+                                    actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
+                                    ActualizarSolicitudAceptada2(conductor.id)
+                                    actualizardestinationLatLng(LatLng)
+                                    Log.d("Hola","Un conductor termino su viaje")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                    Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+            handler.postDelayed(this,5500)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_map, container, false)
         db = DBsqlite(requireContext())
-
         // Inicializar el cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
@@ -147,6 +185,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         checkLocationPermissionAndGetLocation()
         // Comenzamos el ciclo de actualización de posiciones
         handler.post(updateRunnable3)
+        handler.post(updateRunnable4)
         handler.post(updateRunnable)
     }
 
@@ -183,6 +222,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     currentLatLng = newLatLng
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
                         cargadepantalla()
+                        LeerClientes2(false, db.obtenerid())
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
                         actualizardestinationLatLng(newLatLng)
@@ -239,7 +279,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun comprobarconductor(conductores: List<Conductores>, latLng: LatLng) {
         for (conductor in conductores) {
             if (conductor.ubicacion.activo) {
-                if(db.obtenerTipoUsuario() == "cliente"){
+                if(db.obtenerTipoUsuario() == "cliente" && db.obtenerRealizadoPedido() == "REALIZANDO"){
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         val latLng2 = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
                         destinationLatLng = latLng
@@ -247,10 +287,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         handler.removeCallbacks(updateRunnable3)
                         currentDialog2?.dismiss()
                         currentDialog2 = null
-                        actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true, conductor.id)
+                        actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,true, conductor.id)
                         updateLocationOnMap(latLng2)
-                    }else{
-                        actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,0)
+                        break
                     }
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
@@ -262,10 +301,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         //Log.d("Hola", "Estoy pasando para actualizar la ubicacion del conductor2")
                         ActualizarDestinationUbication(conductor.solicitud.usuario,lntlng2)
                     }else {
-                        Log.d("Hola", "No paso")
                         LeerClientes()
                     }
                     return
+                }else if(db.obtenerRealizadoPedido() == "NINGUNO"){
+                    isDestinationUpdated = false
+                    Log.d("Hola","no hay ningun pedido para este usuario")
+                    updateLocationOnMap(latLng)
                 }
             }
         }
@@ -355,6 +397,39 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
+    fun LeerClientes2(Bandera: Boolean, Id: Int){
+        RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
+            override fun onResponse(
+                call: Call<List<Clientes>>,
+                response: Response<List<Clientes>>
+            ) {
+                if (response.isSuccessful) {
+                    val clientes = response.body()
+                    clientes?.let {
+                        for (cliente in it){
+                            if(db.obtenerTipoUsuario() == "cliente" && Id == db.obtenerid() && cliente.ubicacion.conductor != 0 && Bandera){
+                                db.actualizarrealizarpedido("NINGUNO")
+                                showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
+                                isDestinationUpdated = false
+                                banderapaso = false
+                                actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,false,0)
+                            }else if(db.obtenerid() == cliente.id && db.obtenerRealizadoPedido()=="REALIZANDO" && !Bandera && !cliente.ubicacion.atendido){
+                                actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,0)
+                                Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
     fun comprobarcliente(cliente: List<Clientes>){
         for(clientes in cliente){
             if(clientes.ubicacion.activo && !clientes.ubicacion.atendido){
@@ -420,6 +495,54 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
+    fun ActualizarSolicitudAceptada2(id: Int){
+        val aceptada = ActualizarAceptadaRequest(
+            aceptada = false
+        )
+        val call = RetrofitClient.instance.actualizarAceptada(id,aceptada)
+
+        call.enqueue(object : Callback<Conductores> {
+            override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
+                if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    Log.d("Aceptada", "Conductor actualizado exitosamente")
+                } else {
+                    // Manejar el error si la respuesta no es exitosa
+                    Log.e("Aceptada", "Error al actualizar el cliente: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Conductores>, t: Throwable) {
+                // Manejar errores de red o problemas con Retrofit
+                Log.e("Aceptada", "Error de red o conexión: ${t.message}")
+            }
+        })
+    }
+
+    fun ActualizarSolicitudAtivo(id: Int, Activo: Boolean){
+        val aceptada = ActualizarActivoRequest2(
+            activo = Activo
+        )
+        val call = RetrofitClient.instance.actualizarActivo(id,aceptada)
+
+        call.enqueue(object : Callback<Clientes> {
+            override fun onResponse(call: Call<Clientes>, response: Response<Clientes>) {
+                if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    Log.d("Aceptada", "Conductor actualizado exitosamente")
+                } else {
+                    // Manejar el error si la respuesta no es exitosa
+                    Log.e("Aceptada", "Error al actualizar el cliente: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Clientes>, t: Throwable) {
+                // Manejar errores de red o problemas con Retrofit
+                Log.e("Aceptada", "Error de red o conexión: ${t.message}")
+            }
+        })
+    }
+
     fun ActualizarDestinationUbication(id: Int,lntlng:LatLng){
         RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(
@@ -452,11 +575,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun actualizarCliente(id: Int, latitud: Double, longitud: Double, Atendido: Boolean, Conductor: Int) {
+    fun actualizarCliente(id: Int, latitud: Double, longitud: Double,Activo: Boolean, Atendido: Boolean, Conductor: Int) {
         val cliente = ActualizarDatosClientes(
             latitud = latitud,
             longitud = longitud,
-            activo = true,
+            activo = Activo,
             atendido = Atendido,
             conductor = Conductor
         )
@@ -466,10 +589,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         call.enqueue(object : Callback<Clientes> {
             override fun onResponse(call: Call<Clientes>, response: Response<Clientes>) {
                 if (response.isSuccessful) {
-                    // La actualización fue exitosa, puedes manejar la respuesta
                     Log.d("Cliente", "Cliente actualizado exitosamente")
                 } else {
-                    // Manejar el error si la respuesta no es exitosa
                     Log.e("Cliente", "Error al actualizar el cliente: ${response.message()}")
                 }
             }
@@ -551,6 +672,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         handler.removeCallbacks(updateRunnable)  // Detener las actualizaciones cuando se destruye el fragmento
         handler.removeCallbacks(updateRunnable2)
         handler.removeCallbacks(updateRunnable3)
+        handler.removeCallbacks(updateRunnable4)
     }
 
     companion object {
@@ -641,6 +763,45 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         dialog.show()
         currentDialog2 = dialog
+    }
+
+    private fun showCustomDialog2(message: String, onButtonClick: (() -> Unit)? = null) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_alert, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+
+        // Configura la animación del diálogo
+        dialog.window?.apply {
+            setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
+            setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+        }
+
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
+
+        // Configura el mensaje y el botón
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
+        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+
+        dialogMessage.text = message
+
+        dialogButton.setOnClickListener {
+            // Deshabilitar el botón inmediatamente
+            dialogButton.isEnabled = false
+
+            // Ejecutar la acción personalizada solo una vez
+            onButtonClick?.invoke()
+
+            // Cerrar el diálogo después de un pequeño retraso para asegurar que no se active de nuevo
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            // Deshabilitar animaciones adicionales al cerrar
+            //Toast.makeText(this,"hola").show()
+            dialogButton.isEnabled = false
+        }
+
+        dialog.show()
     }
 
 }

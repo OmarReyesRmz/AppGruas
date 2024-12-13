@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
 
         val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
         callCraneButton.setOnClickListener {
-            if(db.obtenerRealizadoPedido() == "REALIZANDO") {
+            if(db.obtenerRealizadoPedido() == "NINGUNO") {
                 navigateToMapFragment()
             }
         }

@@ -1,6 +1,5 @@
 package com.example.gruas
 
-
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
@@ -15,6 +14,14 @@ object RetrofitClient {
 
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
+            .cache(null) // Deshabilitar el almacenamiento en caché
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("Cache-Control", "no-cache") // Deshabilitar caché a nivel de encabezado
+                    .header("Pragma", "no-cache") // Compatibilidad adicional con HTTP 1.0
+                    .build()
+                chain.proceed(request)
+            }
             .build()
 
         val retrofit = Retrofit.Builder()

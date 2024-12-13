@@ -32,6 +32,12 @@ interface ApiService {
         @Body request: ActualizarAceptadaRequest
     ): Call<Conductores>
 
+    @PUT("actualizar-activo/clientes/:{id}")
+    fun actualizarActivo(
+        @Path("id") id: Int,
+        @Body request: ActualizarActivoRequest2
+    ): Call<Clientes>
+
 
     @POST("Registrar-Cliente/")
     fun registrarCliente(@Body cliente: Clientes): Call<Clientes>
