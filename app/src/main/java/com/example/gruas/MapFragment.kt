@@ -138,12 +138,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         val conductores = response.body()
                         conductores?.let {
                             for (conductor in it){
-                                Log.d("Prueba","${conductor.aceptada} - ${conductor.solicitud.usuario} - ${conductor.solicitud.espera}")
                                 if(conductor.aceptada == false && conductor.solicitud.usuario != 0 && !conductor.solicitud.espera) {
-                                    Log.d("Prueba","Runnable4")
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
                                     LeerClientes2(true,conductor.solicitud.usuario)
+                                    Thread.sleep(4000)
                                     actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
                                     ActualizarSolicitudAceptada2(conductor.id)
                                     actualizardestinationLatLng(LatLng)
@@ -160,7 +159,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,5500)
+            handler.postDelayed(this,1000)
         }
     }
 
@@ -185,7 +184,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         checkLocationPermissionAndGetLocation()
         // Comenzamos el ciclo de actualización de posiciones
         handler.post(updateRunnable3)
-        handler.post(updateRunnable4)
         handler.post(updateRunnable)
     }
 
@@ -285,6 +283,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         destinationLatLng = latLng
                         isDestinationUpdated = true
                         handler.removeCallbacks(updateRunnable3)
+                        handler.post(updateRunnable4)
                         currentDialog2?.dismiss()
                         currentDialog2 = null
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,true, conductor.id)
@@ -407,15 +406,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val clientes = response.body()
                     clientes?.let {
                         for (cliente in it){
-                            if(db.obtenerTipoUsuario() == "cliente" && Id == db.obtenerid() && cliente.ubicacion.conductor != 0 && Bandera){
-                                db.actualizarrealizarpedido("NINGUNO")
-                                showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
+                            if(Id == cliente.id && cliente.ubicacion.conductor != 0 && Bandera){
+                                if(db.obtenerTipoUsuario() == "cliente") {
+                                    db.actualizarrealizarpedido("NINGUNO")
+                                    showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
+                                }
+                                handler.removeCallbacks(updateRunnable4)
                                 isDestinationUpdated = false
                                 banderapaso = false
-                                actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,false,0)
+                                actualizarCliente(cliente.id,cliente.ubicacion.latitud,cliente.ubicacion.longitud,false,false,0)
                             }else if(db.obtenerid() == cliente.id && db.obtenerRealizadoPedido()=="REALIZANDO" && !Bandera && !cliente.ubicacion.atendido){
                                 actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,0)
-                                Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
+                                //Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
                             }
                         }
                     }
