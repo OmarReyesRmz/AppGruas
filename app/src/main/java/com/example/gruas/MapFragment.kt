@@ -236,9 +236,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
                         isDestinationUpdated = true
+                        handler.removeCallbacks(updateRunnable3)
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true, conductor.id)
                         updateLocationOnMap(latLng)
-                        handler.removeCallbacks(updateRunnable3)
                     }else{
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,0)
                     }
