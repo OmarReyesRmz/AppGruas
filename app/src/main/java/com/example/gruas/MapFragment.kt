@@ -46,6 +46,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var currentLatLng: LatLng? = null
     private var isDestinationUpdated = false
     private lateinit var clientes_pasados: List<Clientes>
+    private lateinit var conductores_pasados: Conductores
 
     private val handler = Handler()
     private val updateRunnable = object : Runnable {
@@ -87,6 +88,37 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private val updateRunnable3 = object : Runnable {
+        override fun run() {
+            RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
+                override fun onResponse(
+                    call: Call<List<Conductores>>,
+                    response: Response<List<Conductores>>
+                ) {
+                    if (response.isSuccessful) {
+                        val conductores = response.body()
+                        conductores?.let {
+                            for (conductor in it){
+                                if(conductor.aceptada == true && conductor.solicitud.usuario == db.obtenerid()) {
+                                    val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
+                                    comprobarconductor(it,LatLng)
+                                    Log.d("Hola","hubo un cambios en conductores")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                    Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+            handler.postDelayed(this,1000)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -108,6 +140,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         map = googleMap
         checkLocationPermissionAndGetLocation()
         // Comenzamos el ciclo de actualización de posiciones
+        handler.post(updateRunnable3)
         handler.post(updateRunnable)
     }
 
@@ -149,7 +182,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
-                        Log.d("Hola", "entre a la funcion actualizardestinationLatLng")
                         actualizardestinationLatLng(newLatLng)
                     }else{
                         updateLocationOnMap(newLatLng)
@@ -199,14 +231,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun comprobarconductor(conductores: List<Conductores>, latLng: LatLng) {
         for (conductor in conductores) {
-            //Log.d("Hola", "${conductor.id} - ${db.obtenerid()} - ${db.obtenerTipoUsuario()}")
             if (conductor.ubicacion.activo) {
                 if(db.obtenerTipoUsuario() == "cliente"){
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         destinationLatLng = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
-                        isDestinationUpdated = true  // Marcamos que el destino ha sido actualizado
+                        isDestinationUpdated = true
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true, conductor.id)
                         updateLocationOnMap(latLng)
+                        handler.removeCallbacks(updateRunnable3)
                     }else{
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,0)
                     }
@@ -508,7 +540,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         super.onDestroy()
         handler.removeCallbacks(updateRunnable)  // Detener las actualizaciones cuando se destruye el fragmento
     }
-    // Agrega una propiedad estática a la clase para manejar diálogos globalmente
+
     companion object {
         private var currentDialog: AlertDialog? = null
     }

@@ -40,7 +40,9 @@
 
             if(!db.datosExistentes()){
                 db.guardarDatos("NO","NIGUNO","NIGUNO","NIGUNO",
-                    "NIGUNO","NIGUNO","NIGUNO",0f,0f,"NO")
+                    "NIGUNO","NIGUNO","NIGUNO",0f,0f,"NO",
+                    "NIGUNO","NIGUNO","NIGUNO","NIGUNO",
+                    "NIGUNO","NIGUNO")
             }else if(db.obtenerLogeado() == "SI"){
                 val intent = Intent(this, PedirGrua::class.java)
                 startActivity(intent)
