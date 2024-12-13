@@ -38,7 +38,9 @@ class HomeFragment : Fragment() {
 
         val callCraneButton: AppCompatButton = view.findViewById(R.id.call_crane_button)
         callCraneButton.setOnClickListener {
-            navigateToMapFragment()
+            if(db.obtenerRealizadoPedido() == "REALIZANDO") {
+                navigateToMapFragment()
+            }
         }
 
         return view
@@ -46,7 +48,7 @@ class HomeFragment : Fragment() {
 
     private fun setupSpinners(view: View) {
         // Datos para los Spinners
-        val locationOptions = listOf("Mi Ubicación", "Otra Ubicación")
+        val locationOptions = listOf("Mi Ubicación")
         val craneOptions = listOf(
             "Grua Hidráulica",
             "Grua de Plataforma",
