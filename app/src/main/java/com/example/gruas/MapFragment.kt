@@ -351,6 +351,25 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
+    fun LeerViajes(){
+        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+            override fun onResponse(
+                call: Call<List<RegistrarViaje>>,
+                response: Response<List<RegistrarViaje>>
+            ) {
+                if (response.isSuccessful) {
+
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
     fun LeerConductores(id: Int){
         RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
             override fun onResponse(
@@ -711,6 +730,31 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
         val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
         val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+
+        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+            override fun onResponse(
+                call: Call<List<RegistrarViaje>>,
+                response: Response<List<RegistrarViaje>>
+            ) {
+                if (response.isSuccessful) {
+                    val viajes = response.body()
+                    viajes?.let{
+                        for(viaje in it){
+                            if(viaje.id_cliente == id){
+                                dialogMessage2.text = viaje.modelo_del_auto
+                                dialogMessage3.text = viaje.placas_cliente
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
 
         dialogMessage.text = message
 

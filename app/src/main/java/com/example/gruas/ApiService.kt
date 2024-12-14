@@ -14,6 +14,9 @@ interface ApiService {
     @GET("ver-conductores/")
     fun getConductores(): Call<List<Conductores>>
 
+    @GET("ver-viajes/")
+    fun getViajes(): Call<List<RegistrarViaje>>
+
     @PUT("actualizar-ubicacion/clientes/{id}")
     fun actualizarCliente(
         @Path("id") id: Int,  // ID del cliente a actualizar
