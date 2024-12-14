@@ -466,7 +466,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                 //Log.d("Hola","Antes de entrar")
-                ActualizarViaje(conductor.id, conductor.ubicacion.latitud, conductor.ubicacion.longitud, conductor.solicitud.usuario)
+                actualizarviaje(conductor.id, conductor.ubicacion.latitud, conductor.ubicacion.longitud, conductor.solicitud.usuario)
                 ActualizarDestinationUbication(id,lntlng)
                 //Log.d("Hola","despues de entrar")
                 break
