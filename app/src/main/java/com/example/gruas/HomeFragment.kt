@@ -17,6 +17,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var db: DBsqlite
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Ocultar la barra de estado si es necesario (requiere compatibilidad con Activity)

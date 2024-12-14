@@ -98,6 +98,7 @@ class NuevoRegistro: AppCompatActivity() {
                             Toast.makeText(this@NuevoRegistro, "Error de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
                         }
                     })
+
                 } else {
                     // Manejar el caso en el que las contraseñas no coincidan
                     showCustomDialog("Las contraseñas no coinciden.")
