@@ -687,7 +687,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         // Cerrar cualquier diálogo existente antes de crear uno nuevo
         currentDialog?.dismiss()
 
-        val dialogView = layoutInflater.inflate(R.layout.dialog_alert, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_topbackgroud, null)
         val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
         // Almacenar la referencia al diálogo actual
@@ -707,7 +707,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         dialog.setCancelable(false)
 
         // Configura el mensaje y el botón
-        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_message)
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
+        val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
+        val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
         val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
 
         dialogMessage.text = message
