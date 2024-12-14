@@ -220,6 +220,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     currentLatLng = newLatLng
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
                         cargadepantalla()
+                        nuevoviaje()
                         LeerClientes2(false, db.obtenerid())
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
@@ -465,6 +466,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                 //Log.d("Hola","Antes de entrar")
+                ActualizarViaje(conductor.id, conductor.ubicacion.latitud, conductor.ubicacion.longitud, conductor.solicitud.usuario)
                 ActualizarDestinationUbication(id,lntlng)
                 //Log.d("Hola","despues de entrar")
                 break
@@ -806,4 +808,80 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         dialog.show()
     }
 
+    private fun actualizarviaje(id_conductor : Int, latitud_conductor: Double, longitud_conductor: Double, id_cliente: Int){
+        val viajes = ActualizarViaje(
+            id_conductor = id_conductor,
+            latitud_conductor = latitud_conductor,
+            longitud_conductor = longitud_conductor,
+            id_cliente = id_cliente
+        )
+
+        val call = RetrofitClient.instance.actualizarViaje(viajes)
+
+        call.enqueue(object : Callback<RegistrarViaje> {
+            override fun onResponse(call: Call<RegistrarViaje>, response: Response<RegistrarViaje>) {
+                if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    Log.d("Conductor", "Conductor actualizado exitosamente")
+                } else {
+                    // Manejar el error si la respuesta no es exitosa
+                    Log.e("Conductor", "Error al actualizar el cliente: ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<RegistrarViaje>, t: Throwable) {
+                // Manejar errores de red o problemas con Retrofit
+                Log.e("Conductor", "Error de red o conexión: ${t.message}")
+            }
+        })
+    }
+
+    private fun nuevoviaje(){
+        var id_cliente: Int = 0
+        var latitud_cliente: Double = 0.0000
+        var longitud_cliente: Double= 0.0000
+        var tipo_grua: String = ""
+        var direccion_envio: String = ""
+        var modelo_del_auto: String = ""
+        var placas_cliente: String = ""
+        var comentarios:String = ""
+        var latitud_conductor: Double= 0.0000
+        var longitud_conductor: Double= 0.0000
+        var id_conductor: Int = 0
+        if(db.obtenerTipoUsuario() == "cliente"){
+            id_cliente = db.obtenerid()
+            latitud_cliente = db.obtenerLatitud().toDouble()
+            longitud_cliente = db.obtenerLongitud().toDouble()
+            tipo_grua = db.obtenerTipodegrua()
+            comentarios = db.obtenerComentarios()
+            placas_cliente = db.obtenerPlacas()
+            modelo_del_auto = db.obtenerModeloauto()
+        }
+
+        val nuevoViaje =
+            RegistrarViaje(id_cliente,latitud_cliente,longitud_cliente,tipo_grua,
+            direccion_envio,modelo_del_auto,placas_cliente,comentarios,latitud_conductor,
+            longitud_conductor,id_conductor)
+
+        // Llamada a la API para registrar al cliente
+        RetrofitClient.instance.registrarViaje(nuevoViaje).enqueue(object :
+            retrofit2.Callback<RegistrarViaje> {  // Cambia el tipo de respuesta al esperado por la API
+            override fun onResponse(call: retrofit2.Call<RegistrarViaje>, response: retrofit2.Response<RegistrarViaje>) {
+                if (response.isSuccessful) {
+                    // Procesar la respuesta exitosa
+                    Log.d("Hola","Viaje nuevo registrado")
+                } else {
+                    Log.e("API_ERROR", "Error en la respuesta: ${response.code()}")
+                    Toast.makeText(requireContext(), "Error en el registro: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<RegistrarViaje>, t: Throwable) {
+                // Manejar errores de conexión o excepciones
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+    }
 }
