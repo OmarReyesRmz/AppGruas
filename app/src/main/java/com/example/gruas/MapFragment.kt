@@ -52,9 +52,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var isDestinationUpdated = false
     private var banderapaso = false
     private lateinit var clientes_pasados: List<Clientes>
-    private lateinit var conductores_pasados: List<Conductores>
     private var currentDialog2: Dialog? = null
-    private var bandera_pedido_terminado = 0
+    private var currentDialog3: Dialog? = null
 
     private val handler = Handler()
     private val updateRunnable = object : Runnable {
@@ -142,9 +141,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
                                     LeerClientes2(true,conductor.solicitud.usuario)
+                                    if(db.obtenerTipoUsuario() == "cliente"){
+                                        currentDialog3?.dismiss()
+                                        currentDialog3 = null
+                                    }
                                     Thread.sleep(4000)
                                     actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
-                                    ActualizarSolicitudAceptada2(conductor.id)
                                     actualizardestinationLatLng(LatLng)
                                     Log.d("Hola","Un conductor termino su viaje")
                                 }
@@ -159,7 +161,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,1000)
+            handler.postDelayed(this,1500)
         }
     }
 
@@ -249,9 +251,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             //Log.d("Hola","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
             if(db.obtenerTipoUsuario() == "cliente"){
-                showinfo()
+                showinfo(NombreConductor())
             }else if(db.obtenerTipoUsuario() == "conductor"){
-                showinfo2()
+                showinfo2(NombreCliente())
             }
             getDirections(latLng, destinationLatLng)
         }
@@ -356,23 +358,60 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun LeerViajes(){
-        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+    fun NombreCliente(): String{
+        var nombre = ""
+        RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(
-                call: Call<List<RegistrarViaje>>,
-                response: Response<List<RegistrarViaje>>
+                call: Call<List<Clientes>>,
+                response: Response<List<Clientes>>
             ) {
                 if (response.isSuccessful) {
-
+                    val clientes = response.body()
+                    clientes?.let {
+                        for(cliente in it){
+                            if(db.obtenerid() == cliente.ubicacion.conductor){
+                                nombre = cliente.nombre + " " + cliente.apellido
+                            }
+                        }
+                    }
                 } else {
                     Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
                 }
             }
-            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+            override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
                 Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
                 Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
+        return nombre
+    }
+
+    fun NombreConductor(): String{
+        var nombre = ""
+        RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
+            override fun onResponse(
+                call: Call<List<Conductores>>,
+                response: Response<List<Conductores>>
+            ) {
+                if (response.isSuccessful) {
+                    val conductores = response.body()
+                    conductores?.let {
+                        for(conductor in it){
+                            if(db.obtenerid() == conductor.solicitud.usuario){
+                                nombre = conductor.nombre + " " + conductor.apellido
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+        return nombre
     }
 
     fun LeerConductores(id: Int){
@@ -701,6 +740,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         handler.removeCallbacks(updateRunnable2)
         handler.removeCallbacks(updateRunnable3)
         handler.removeCallbacks(updateRunnable4)
+        currentDialog2?.dismiss()
+        currentDialog2 = null
+        currentDialog3?.dismiss()
+        currentDialog3 = null
     }
 
     companion object {
@@ -936,11 +979,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     }
 
-    private fun showinfo(onButtonClick: (() -> Unit)? = null) {
+    private fun showinfo(message: String,onButtonClick: (() -> Unit)? = null) {
         // Cerrar cualquier diálogo existente antes de crear uno nuevo
         currentDialog?.dismiss()
 
-        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_topbackgroud, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_info_conductor, null)
         val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
         // Almacenar la referencia al diálogo actual
@@ -953,7 +996,38 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             setWindowAnimations(R.style.DialogAnimation2)
             WindowManager.LayoutParams.MATCH_PARENT
             WindowManager.LayoutParams.WRAP_CONTENT
-            setDimAmount(0.6f)
+            setDimAmount(0f)
+        }
+
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
+
+        // Configura el mensaje y el botón
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
+        dialogMessage.text = message
+
+        dialog.show()
+        currentDialog3 = dialog
+    }
+
+    private fun showinfo2(message: String,onButtonClick: (() -> Unit)? = null) {
+        // Cerrar cualquier diálogo existente antes de crear uno nuevo
+        currentDialog?.dismiss()
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_info_cliente, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+
+        // Almacenar la referencia al diálogo actual
+        currentDialog = dialog
+
+        // Configura la animación del diálogo
+        dialog.window?.apply {
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+            attributes.y = 50
+            setWindowAnimations(R.style.DialogAnimation2)
+            WindowManager.LayoutParams.MATCH_PARENT
+            WindowManager.LayoutParams.WRAP_CONTENT
+            setDimAmount(0f)
         }
 
         dialog.setCanceledOnTouchOutside(false)
@@ -963,7 +1037,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
         val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
         val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
-        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button2)
 
         RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
             override fun onResponse(
@@ -990,21 +1064,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             }
         })
 
-        dialogMessage.text = "HOLA"
+        dialogMessage.text = message
 
         dialogButton.setOnClickListener {
-            dialogButton.isEnabled = false
-            actualizarConductor(
-                db.obtenerid(),
-                db.obtenerLatitud().toDouble(),
-                db.obtenerLongitud().toDouble(),
-                true,
-                false,
-                id,
-                true
-            )
-            onButtonClick?.invoke()
 
+            dialogButton.isEnabled = false
+            ActualizarSolicitudAceptada2(db.obtenerid())
+            handler.post(updateRunnable4)
+            onButtonClick?.invoke()
             // Limpiar la referencia al diálogo actual
             currentDialog = null
             dialog.dismiss()
@@ -1020,91 +1087,4 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         dialog.show()
     }
-
-    private fun showinfo2(onButtonClick: (() -> Unit)? = null) {
-        // Cerrar cualquier diálogo existente antes de crear uno nuevo
-        currentDialog?.dismiss()
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_topbackgroud, null)
-        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
-
-        // Almacenar la referencia al diálogo actual
-        currentDialog = dialog
-
-        // Configura la animación del diálogo
-        dialog.window?.apply {
-            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
-            attributes.y = 50
-            setWindowAnimations(R.style.DialogAnimation2)
-            WindowManager.LayoutParams.MATCH_PARENT
-            WindowManager.LayoutParams.WRAP_CONTENT
-            setDimAmount(0.6f)
-        }
-
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setCancelable(false)
-
-        // Configura el mensaje y el botón
-        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
-        val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
-        val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
-        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
-
-        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
-            override fun onResponse(
-                call: Call<List<RegistrarViaje>>,
-                response: Response<List<RegistrarViaje>>
-            ) {
-                if (response.isSuccessful) {
-                    val viajes = response.body()
-                    viajes?.let{
-                        for(viaje in it){
-                            if(viaje.id_cliente == id){
-                                dialogMessage2.text = viaje.modelo_del_auto
-                                dialogMessage3.text = viaje.placas_cliente
-                            }
-                        }
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
-                }
-            }
-            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
-                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
-
-        dialogMessage.text = "HOLA"
-
-        dialogButton.setOnClickListener {
-            dialogButton.isEnabled = false
-            actualizarConductor(
-                db.obtenerid(),
-                db.obtenerLatitud().toDouble(),
-                db.obtenerLongitud().toDouble(),
-                true,
-                false,
-                id,
-                true
-            )
-            onButtonClick?.invoke()
-
-            // Limpiar la referencia al diálogo actual
-            currentDialog = null
-            dialog.dismiss()
-        }
-
-        dialog.setOnDismissListener {
-            dialogButton.isEnabled = false
-            // Limpiar la referencia al diálogo actual
-            if (currentDialog == dialog) {
-                currentDialog = null
-            }
-        }
-
-        dialog.show()
-    }
-
-
 }
