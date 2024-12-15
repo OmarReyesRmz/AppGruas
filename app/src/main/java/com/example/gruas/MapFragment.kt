@@ -532,10 +532,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         for (conductor in conductores) {
             if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
                 //actualizar solicitud aceptada
-                //Log.d("Hola","$id cliente")
                 ActualizarSolicitudAceptada(conductor.id)
                 band = conductor.id
-                //Log.d("Hola","$id cliente sali ya esta aceptada")
                 break;
             }
         }
@@ -934,20 +932,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         val call = RetrofitClient.instance.actualizarViaje(viajes)
 
+        //Log.d("Pruebac","$viajes")
+
         call.enqueue(object : Callback<RegistrarViaje> {
             override fun onResponse(call: Call<RegistrarViaje>, response: Response<RegistrarViaje>) {
                 if (response.isSuccessful) {
                     // La actualización fue exitosa, puedes manejar la respuesta
-                    Log.d("Conductor", "Conductor actualizado exitosamente")
+                    Log.d("Pruebac", "Conductor actualizado exitosamente")
                 } else {
                     // Manejar el error si la respuesta no es exitosa
-                    Log.e("Conductor", "Error al actualizar el cliente: ${response.message()}")
+                    Log.e("Pruebac", "Error al actualizar el cliente: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<RegistrarViaje>, t: Throwable) {
                 // Manejar errores de red o problemas con Retrofit
-                Log.e("Conductor", "Error de red o conexión: ${t.message}")
+                Log.e("Pruebac", "Error de red o conexión: ${t.message}")
             }
         })
     }
