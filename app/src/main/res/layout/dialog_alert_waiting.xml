@@ -1,0 +1,21 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@color/transparent"
+    android:gravity="center">
+
+    <!-- Icono de advertencia -->
+    <ImageView
+        android:id="@+id/dialog_icon"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/baseline_rotate_right_24"
+        android:tint="@color/fondo"
+        android:layout_gravity="center"
+        android:contentDescription="Advertencia"
+        android:paddingBottom="10dp" />
+
+
+</LinearLayout>

@@ -14,6 +14,9 @@ interface ApiService {
     @GET("ver-conductores/")
     fun getConductores(): Call<List<Conductores>>
 
+    @GET("ver-viajes/")
+    fun getViajes(): Call<List<RegistrarViaje>>
+
     @PUT("actualizar-ubicacion/clientes/{id}")
     fun actualizarCliente(
         @Path("id") id: Int,  // ID del cliente a actualizar
@@ -32,8 +35,23 @@ interface ApiService {
         @Body request: ActualizarAceptadaRequest
     ): Call<Conductores>
 
+    @PUT("actualizar-activo/clientes/:{id}")
+    fun actualizarActivo(
+        @Path("id") id: Int,
+        @Body request: ActualizarActivoRequest2
+    ): Call<Clientes>
+
 
     @POST("Registrar-Cliente/")
     fun registrarCliente(@Body cliente: Clientes): Call<Clientes>
+
+    @POST("Registrar-Viajes/")
+    fun registrarViaje(@Body viaje: RegistrarViaje): Call<RegistrarViaje>
+
+    @PUT("Actualizar-Viajes/")
+    fun actualizarViaje(@Body viaje: ActualizarViaje): Call<RegistrarViaje>
+
+
+
 
 }

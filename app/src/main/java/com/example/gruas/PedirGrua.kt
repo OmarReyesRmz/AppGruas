@@ -9,6 +9,8 @@ import com.example.gruas.databinding.ActivityFragmentsBinding
 class PedirGrua : AppCompatActivity() {
 
     private lateinit var binding: ActivityFragmentsBinding
+    private lateinit var db: DBsqlite
+    private var esCliente: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,38 +21,57 @@ class PedirGrua : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
 
+        // Inicializa la base de datos
+        db = DBsqlite(this)
+
+        // Determina el tipo de usuario
+        esCliente = db.obtenerTipoUsuario() == "cliente" // Suponiendo que "cliente" es el valor esperado
+
         // Inicializa el binding
         binding = ActivityFragmentsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Ajusta el menú del BottomNavigationView según el tipo de usuario
+        if (!esCliente) {
+            binding.bottomNavigationView.menu.findItem(R.id.Home).isVisible = false
+        }
+
         // Configura el BottomNavigationView
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.Home -> {
-                    loadFragment(HomeFragment())
-                    true
-                }
-                R.id.Profile -> {
-                    loadFragment(ProfileFragment())
-                    true
-                }
-                R.id.Settings -> {
-                    loadFragment(SettingsFragment())
-                    true
-                }
-                R.id.Map -> {
-                    loadFragment(MapFragment())
-                    true
-                }
-                else -> {
-                    false
+            if (!esCliente && item.itemId == R.id.Home) {
+                // Ignora la selección de Home si es un conductor
+                false
+            } else {
+                when (item.itemId) {
+                    R.id.Home -> {
+                        loadFragment(HomeFragment())
+                        true
+                    }
+                    R.id.Map -> {
+                        loadFragment(MapFragment())
+                        true
+                    }
+                    R.id.Profile -> {
+                        loadFragment(ProfileFragment())
+                        true
+                    }
+                    R.id.Settings -> {
+                        loadFragment(SettingsFragment())
+                        true
+                    }
+
+                    else -> false
                 }
             }
         }
 
-        // Carga el fragmento inicial (HomeFragment)
+        // Carga el fragmento inicial
         if (savedInstanceState == null) {
-            loadFragment(HomeFragment())
+            if (esCliente) {
+                loadFragment(HomeFragment())
+            } else {
+                loadFragment(MapFragment())
+            }
         }
     }
 

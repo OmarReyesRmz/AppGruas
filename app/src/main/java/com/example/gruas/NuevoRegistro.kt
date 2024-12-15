@@ -66,7 +66,7 @@ class NuevoRegistro: AppCompatActivity() {
                 && email.isNotEmpty() && phone.isNotEmpty() && direccion.isNotEmpty() &&
                 password1.isNotEmpty() && password2.isNotEmpty()){
                 if (password1 == password2) {  // Asegúrate de que las contraseñas coinciden
-                    val ubicacion = Ubicacion(0.0,0.0,false,false)
+                    val ubicacion = Ubicacion(0.0,0.0,false,false, 0)
                     val nuevoCliente = Clientes(1, name, fullName, direccion, phone, email, password1,ubicacion)
 
                     // Llamada a la API para registrar al cliente
@@ -98,6 +98,7 @@ class NuevoRegistro: AppCompatActivity() {
                             Toast.makeText(this@NuevoRegistro, "Error de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
                         }
                     })
+
                 } else {
                     // Manejar el caso en el que las contraseñas no coincidan
                     showCustomDialog("Las contraseñas no coinciden.")
