@@ -248,6 +248,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         if (isDestinationUpdated) {
             //Log.d("Hola","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
+            if(db.obtenerTipoUsuario() == "cliente"){
+                showinfo()
+            }else if(db.obtenerTipoUsuario() == "conductor"){
+                showinfo2()
+            }
             getDirections(latLng, destinationLatLng)
         }
     }
@@ -716,7 +721,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         dialog.window?.apply {
             setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
             attributes.y = 50
-            setWindowAnimations(R.style.DialogAnimation)
+            setWindowAnimations(R.style.DialogAnimation2)
             WindowManager.LayoutParams.MATCH_PARENT
             WindowManager.LayoutParams.WRAP_CONTENT
             setDimAmount(0.6f)
@@ -930,4 +935,176 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
 
     }
+
+    private fun showinfo(onButtonClick: (() -> Unit)? = null) {
+        // Cerrar cualquier diálogo existente antes de crear uno nuevo
+        currentDialog?.dismiss()
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_topbackgroud, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+
+        // Almacenar la referencia al diálogo actual
+        currentDialog = dialog
+
+        // Configura la animación del diálogo
+        dialog.window?.apply {
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+            attributes.y = 50
+            setWindowAnimations(R.style.DialogAnimation2)
+            WindowManager.LayoutParams.MATCH_PARENT
+            WindowManager.LayoutParams.WRAP_CONTENT
+            setDimAmount(0.6f)
+        }
+
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
+
+        // Configura el mensaje y el botón
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
+        val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
+        val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
+        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+
+        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+            override fun onResponse(
+                call: Call<List<RegistrarViaje>>,
+                response: Response<List<RegistrarViaje>>
+            ) {
+                if (response.isSuccessful) {
+                    val viajes = response.body()
+                    viajes?.let{
+                        for(viaje in it){
+                            if(viaje.id_cliente == id){
+                                dialogMessage2.text = viaje.modelo_del_auto
+                                dialogMessage3.text = viaje.placas_cliente
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        dialogMessage.text = "HOLA"
+
+        dialogButton.setOnClickListener {
+            dialogButton.isEnabled = false
+            actualizarConductor(
+                db.obtenerid(),
+                db.obtenerLatitud().toDouble(),
+                db.obtenerLongitud().toDouble(),
+                true,
+                false,
+                id,
+                true
+            )
+            onButtonClick?.invoke()
+
+            // Limpiar la referencia al diálogo actual
+            currentDialog = null
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            dialogButton.isEnabled = false
+            // Limpiar la referencia al diálogo actual
+            if (currentDialog == dialog) {
+                currentDialog = null
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showinfo2(onButtonClick: (() -> Unit)? = null) {
+        // Cerrar cualquier diálogo existente antes de crear uno nuevo
+        currentDialog?.dismiss()
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_topbackgroud, null)
+        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+
+        // Almacenar la referencia al diálogo actual
+        currentDialog = dialog
+
+        // Configura la animación del diálogo
+        dialog.window?.apply {
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+            attributes.y = 50
+            setWindowAnimations(R.style.DialogAnimation2)
+            WindowManager.LayoutParams.MATCH_PARENT
+            WindowManager.LayoutParams.WRAP_CONTENT
+            setDimAmount(0.6f)
+        }
+
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setCancelable(false)
+
+        // Configura el mensaje y el botón
+        val dialogMessage = dialogView.findViewById<TextView>(R.id.dialog_person_name)
+        val dialogMessage2 = dialogView.findViewById<TextView>(R.id.dialog_car_model)
+        val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
+        val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
+
+        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+            override fun onResponse(
+                call: Call<List<RegistrarViaje>>,
+                response: Response<List<RegistrarViaje>>
+            ) {
+                if (response.isSuccessful) {
+                    val viajes = response.body()
+                    viajes?.let{
+                        for(viaje in it){
+                            if(viaje.id_cliente == id){
+                                dialogMessage2.text = viaje.modelo_del_auto
+                                dialogMessage3.text = viaje.placas_cliente
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        dialogMessage.text = "HOLA"
+
+        dialogButton.setOnClickListener {
+            dialogButton.isEnabled = false
+            actualizarConductor(
+                db.obtenerid(),
+                db.obtenerLatitud().toDouble(),
+                db.obtenerLongitud().toDouble(),
+                true,
+                false,
+                id,
+                true
+            )
+            onButtonClick?.invoke()
+
+            // Limpiar la referencia al diálogo actual
+            currentDialog = null
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            dialogButton.isEnabled = false
+            // Limpiar la referencia al diálogo actual
+            if (currentDialog == dialog) {
+                currentDialog = null
+            }
+        }
+
+        dialog.show()
+    }
+
+
 }
