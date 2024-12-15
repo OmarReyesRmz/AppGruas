@@ -52,14 +52,6 @@ class ProfileFragment : Fragment() {
         val Telefono: EditText = view.findViewById(R.id.editTextTelefono)
         Telefono.setText(db.obtenerTelefono())
 
-        val CerrarSesion: Button = view.findViewById(R.id.cerrar)
-        CerrarSesion.setOnClickListener{
-        db.actualizarlogeado("NO")
-        val intent = Intent(requireContext(), MainActivity::class.java)
-        startActivity(intent)
-        requireActivity().finish()
-        }
-
         return view
     }
 
