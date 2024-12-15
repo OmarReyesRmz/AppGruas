@@ -45,7 +45,7 @@ interface ApiService {
     @POST("Registrar-Cliente/")
     fun registrarCliente(@Body cliente: Clientes): Call<Clientes>
 
-    @POST("Registrar-Viaje/")
+    @POST("Registrar-Viajes/")
     fun registrarViaje(@Body viaje: RegistrarViaje): Call<RegistrarViaje>
 
     @POST("Actualizar-Viaje/")

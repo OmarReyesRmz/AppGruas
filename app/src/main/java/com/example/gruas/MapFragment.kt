@@ -137,7 +137,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         val conductores = response.body()
                         conductores?.let {
                             for (conductor in it){
-                                if(conductor.aceptada == false && conductor.solicitud.usuario != 0 && !conductor.solicitud.espera) {
+                                if(conductor.aceptada == false && conductor.solicitud.usuario != 0) {
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
                                     LeerClientes2(true,conductor.solicitud.usuario)
@@ -145,8 +145,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                         currentDialog3?.dismiss()
                                         currentDialog3 = null
                                     }
-                                    Thread.sleep(4000)
+                                    Thread.sleep(1000)
                                     actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
+                                    isDestinationUpdated = false
+                                    updateLocationOnMap(LatLng)
+                                    Thread.sleep(1000)
                                     actualizardestinationLatLng(LatLng)
                                     Log.d("Hola","Un conductor termino su viaje")
                                 }
@@ -161,7 +164,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,1500)
+            handler.postDelayed(this,1000)
         }
     }
 
@@ -221,8 +224,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (currentLatLng == null || currentLatLng != newLatLng) {
                     currentLatLng = newLatLng
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
-                        cargadepantalla()
                         nuevoviaje()
+                        cargadepantalla()
                         LeerClientes2(false, db.obtenerid())
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
@@ -251,9 +254,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             //Log.d("Hola","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
             if(db.obtenerTipoUsuario() == "cliente"){
-                showinfo(NombreConductor())
+                NombreConductor { nombre ->
+                    showinfo(nombre)
+                }
             }else if(db.obtenerTipoUsuario() == "conductor"){
-                showinfo2(NombreCliente())
+                NombreCliente { nombre ->
+                    showinfo2(nombre)
+                }
             }
             getDirections(latLng, destinationLatLng)
         }
@@ -358,8 +365,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun NombreCliente(): String{
-        var nombre = ""
+    fun NombreCliente(callback: (String) -> Unit) {
         RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(
                 call: Call<List<Clientes>>,
@@ -368,26 +374,34 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (response.isSuccessful) {
                     val clientes = response.body()
                     clientes?.let {
-                        for(cliente in it){
-                            if(db.obtenerid() == cliente.ubicacion.conductor){
-                                nombre = cliente.nombre + " " + cliente.apellido
+                        for (cliente in it) {
+                            Log.d("Ubicaciones clientes", "${db.obtenerid()} - ${cliente.ubicacion.conductor}")
+                            if (db.obtenerid() == cliente.ubicacion.conductor) {
+                                val nombre = cliente.nombre + " " + cliente.apellido
+                                Log.d("Ubicaciones clientes", "Cliente encontrado: $nombre")
+                                callback(nombre)
+                                return // Salimos del loop y evitamos múltiples llamadas al callback
                             }
                         }
                     }
+                    // Si no se encontró el cliente
+                    callback("")
                 } else {
+                    Log.e("API_ERROR", "Error en la respuesta: ${response.code()}")
                     Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    callback("")
                 }
             }
+
             override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
                 Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error al conectar: ${t.message}", Toast.LENGTH_SHORT).show()
+                callback("")
             }
         })
-        return nombre
     }
 
-    fun NombreConductor(): String{
-        var nombre = ""
+    fun NombreConductor(callback: (String) -> Unit) {
         RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
             override fun onResponse(
                 call: Call<List<Conductores>>,
@@ -396,22 +410,30 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (response.isSuccessful) {
                     val conductores = response.body()
                     conductores?.let {
-                        for(conductor in it){
-                            if(db.obtenerid() == conductor.solicitud.usuario){
-                                nombre = conductor.nombre + " " + conductor.apellido
+                        for (conductor in it) {
+                            Log.d("Ubicaciones cliente", "${db.obtenerid()} - ${conductor.solicitud.usuario}")
+                            if (db.obtenerid() == conductor.solicitud.usuario) {
+                                val nombre = conductor.nombre + " " + conductor.apellido
+                                Log.d("Ubicaciones cliente", "Entre: $nombre")
+                                callback(nombre)
+                                return
                             }
                         }
                     }
+                    // Si no se encontró un conductor
+                    callback("")
                 } else {
                     Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    callback("")
                 }
             }
+
             override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
                 Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error al conectar: ${t.message}", Toast.LENGTH_SHORT).show()
+                callback("")
             }
         })
-        return nombre
     }
 
     fun LeerConductores(id: Int){
@@ -942,6 +964,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         var latitud_conductor: Double= 0.0000
         var longitud_conductor: Double= 0.0000
         var id_conductor: Int = 0
+
         if(db.obtenerTipoUsuario() == "cliente"){
             id_cliente = db.obtenerid()
             latitud_cliente = db.obtenerLatitud().toDouble()
@@ -957,6 +980,35 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             direccion_envio,modelo_del_auto,placas_cliente,comentarios,latitud_conductor,
             longitud_conductor,id_conductor)
 
+
+        //Verificar que no este ya en un viaje
+        RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
+            override fun onResponse(
+                call: Call<List<Clientes>>,
+                response: Response<List<Clientes>>
+            ) {
+                if (response.isSuccessful) {
+                    val clientes = response.body()
+                    clientes?.let {
+                        for(cliente in it){
+                            //Log.d("Nuevo viaje","${db.obtenerid()} = ${cliente.id} && ${cliente.ubicacion.activo}")
+                            if(db.obtenerid() == cliente.id && !cliente.ubicacion.activo){
+                                nuevoviaje2(nuevoViaje)
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun nuevoviaje2(nuevoViaje: RegistrarViaje){
         // Llamada a la API para registrar al cliente
         RetrofitClient.instance.registrarViaje(nuevoViaje).enqueue(object :
             retrofit2.Callback<RegistrarViaje> {  // Cambia el tipo de respuesta al esperado por la API
@@ -976,7 +1028,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 Toast.makeText(requireContext(), "Error de conexión: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
-
     }
 
     private fun showinfo(message: String,onButtonClick: (() -> Unit)? = null) {
