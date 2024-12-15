@@ -375,7 +375,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val clientes = response.body()
                     clientes?.let {
                         for (cliente in it) {
-                            Log.d("Ubicaciones clientes", "${db.obtenerid()} - ${cliente.ubicacion.conductor}")
+                            //Log.d("Ubicaciones clientes", "${db.obtenerid()} - ${cliente.ubicacion.conductor}")
                             if (db.obtenerid() == cliente.ubicacion.conductor) {
                                 val nombre = cliente.nombre + " " + cliente.apellido
                                 Log.d("Ubicaciones clientes", "Cliente encontrado: $nombre")
@@ -493,14 +493,15 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     clientes?.let {
                         for (cliente in it){
                             if(Id == cliente.id && cliente.ubicacion.conductor != 0 && Bandera){
-                                if(db.obtenerTipoUsuario() == "cliente") {
-                                    db.actualizarrealizarpedido("NINGUNO")
-                                    showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
-                                }
+                                db.actualizarrealizarpedido("NINGUNO")
                                 handler.removeCallbacks(updateRunnable4)
                                 isDestinationUpdated = false
                                 banderapaso = false
                                 actualizarCliente(cliente.id,cliente.ubicacion.latitud,cliente.ubicacion.longitud,false,false,0)
+                                Thread.sleep(500)
+                                if(db.obtenerTipoUsuario() == "cliente") {
+                                    showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
+                                }
                             }else if(db.obtenerid() == cliente.id && db.obtenerRealizadoPedido()=="REALIZANDO" && !Bandera && !cliente.ubicacion.atendido){
                                 actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,0)
                                 //Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
@@ -529,6 +530,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun comprobarconductores2(conductores: List<Conductores>, id: Int){
         var band = 10000000
+
         for (conductor in conductores) {
             if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
                 //actualizar solicitud aceptada
@@ -549,12 +551,75 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                 //Log.d("Hola","Antes de entrar")
+
                 actualizarviaje(conductor.id, conductor.ubicacion.latitud, conductor.ubicacion.longitud, conductor.solicitud.usuario)
                 ActualizarDestinationUbication(id,lntlng)
                 //Log.d("Hola","despues de entrar")
                 break
             }
         }
+    }
+
+    private fun latitudCliente(id:Int,callback: (Double) -> Unit) {
+        RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
+            override fun onResponse(
+                call: Call<List<Clientes>>,
+                response: Response<List<Clientes>>
+            ) {
+                if (response.isSuccessful) {
+                    val clientes = response.body()
+                    clientes?.let {
+                        for (cliente in it) {
+                            //Log.d("Ubicaciones clientes", "${db.obtenerid()} - ${cliente.ubicacion.conductor}")
+                            if (cliente.id == id) {
+                                val nombre = cliente.ubicacion.latitud
+                                callback(nombre)
+                                return // Salimos del loop y evitamos múltiples llamadas al callback
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("API_ERROR", "Error en la respuesta: ${response.code()}")
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error al conectar: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun longitudCliente(id:Int,callback: (Double) -> Unit) {
+        RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
+            override fun onResponse(
+                call: Call<List<Clientes>>,
+                response: Response<List<Clientes>>
+            ) {
+                if (response.isSuccessful) {
+                    val clientes = response.body()
+                    clientes?.let {
+                        for (cliente in it) {
+                            //Log.d("Ubicaciones clientes", "${db.obtenerid()} - ${cliente.ubicacion.conductor}")
+                            if (cliente.id == id) {
+                                val nombre = cliente.ubicacion.longitud
+                                callback(nombre)
+                                return // Salimos del loop y evitamos múltiples llamadas al callback
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("API_ERROR", "Error en la respuesta: ${response.code()}")
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<Clientes>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error al conectar: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     fun ActualizarSolicitudAceptada(id: Int){
@@ -857,30 +922,38 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun cargadepantalla(onButtonClick: (() -> Unit)? = null) {
         // Infla el diseño del diálogo
-        val dialogView = layoutInflater.inflate(R.layout.dialog_alert_waiting, null)
-        val dialog = android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
+        if(db.obtenerRealizadoPedido() == "REALIZANDO") {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_alert_waiting, null)
+            val dialog =
+                android.app.AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
-        // Configura la animación del diálogo
-        dialog.window?.apply {
-            setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
-            setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
-            setBackgroundDrawable(ColorDrawable(Color.parseColor("#00000000")))
+            // Configura la animación del diálogo
+            dialog.window?.apply {
+                setWindowAnimations(R.style.DialogAnimation) // Animaciones personalizadas
+                setDimAmount(0.6f) // Atenuar el fondo (entre 0.0 y 1.0)
+                setBackgroundDrawable(ColorDrawable(Color.parseColor("#00000000")))
+            }
+            dialog.setCanceledOnTouchOutside(false)
+            dialog.setCancelable(false)
+
+            // Encuentra la vista que girará dentro de `dialogView`
+            val rotatingView =
+                dialogView.findViewById<ImageView>(R.id.dialog_icon) // Cambiado a `dialogView`
+            if (rotatingView != null) {
+                val rotateAnimation =
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.dialog_animation_infinite)
+                rotatingView.startAnimation(rotateAnimation)
+            } else {
+                // Si no se encuentra la vista, puedes manejarlo con un log o excepción
+                Log.e(
+                    "DialogError",
+                    "No se encontró el elemento con ID dialog_icon en el diseño del diálogo."
+                )
+            }
+
+            dialog.show()
+            currentDialog2 = dialog
         }
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setCancelable(false)
-
-        // Encuentra la vista que girará dentro de `dialogView`
-        val rotatingView = dialogView.findViewById<ImageView>(R.id.dialog_icon) // Cambiado a `dialogView`
-        if (rotatingView != null) {
-            val rotateAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.dialog_animation_infinite)
-            rotatingView.startAnimation(rotateAnimation)
-        } else {
-            // Si no se encuentra la vista, puedes manejarlo con un log o excepción
-            Log.e("DialogError", "No se encontró el elemento con ID dialog_icon en el diseño del diálogo.")
-        }
-
-        dialog.show()
-        currentDialog2 = dialog
     }
 
     private fun showCustomDialog2(message: String, onButtonClick: (() -> Unit)? = null) {
@@ -932,7 +1005,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         val call = RetrofitClient.instance.actualizarViaje(viajes)
 
-        //Log.d("Pruebac","$viajes")
+        Log.d("Pruebac","$viajes")
 
         call.enqueue(object : Callback<RegistrarViaje> {
             override fun onResponse(call: Call<RegistrarViaje>, response: Response<RegistrarViaje>) {
@@ -941,7 +1014,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Log.d("Pruebac", "Conductor actualizado exitosamente")
                 } else {
                     // Manejar el error si la respuesta no es exitosa
-                    Log.e("Pruebac", "Error al actualizar el cliente: ${response.message()}")
+                    Log.e("Pruebac", "Error al actualizar: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             }
 
