@@ -60,7 +60,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         override fun run() {
             // Actualizamos la ubicación del usuario y destino cada 1 segundo
             getMyLocation()
-            handler.postDelayed(this, 30000) // Repite cada 1 segundo
+            handler.postDelayed(this, 1000) // Repite cada 1 segundo
         }
     }
 
@@ -91,7 +91,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,30000)
+            handler.postDelayed(this,1000)
         }
 
     }
@@ -123,7 +123,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,30000)
+            handler.postDelayed(this,1000)
         }
     }
 
@@ -165,7 +165,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
-            handler.postDelayed(this,30000)
+            handler.postDelayed(this,1000)
         }
     }
 
