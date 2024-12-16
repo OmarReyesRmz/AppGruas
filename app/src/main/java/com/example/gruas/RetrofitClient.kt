@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object RetrofitClient {
-    private const val BASE_URL = "https://calm-shrimp-deeply.ngrok-free.app/"
+    private const val BASE_URL = "https://apigruas-2qf0.onrender.com"
 
     val instance: ApiService by lazy {
         val logging = HttpLoggingInterceptor()

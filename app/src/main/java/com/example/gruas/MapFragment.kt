@@ -225,11 +225,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 if (currentLatLng == null || currentLatLng != newLatLng) {
                     currentLatLng = newLatLng
                     if (db.obtenerRealizadoPedido() == "REALIZANDO" && db.obtenerTipoUsuario() == "cliente") {
+                        db.actualizarlatitud(location.latitude.toFloat())
+                        db.actualizarlongitud(location.longitude.toFloat())
                         nuevoviaje()
                         cargadepantalla()
                         LeerClientes2(false, db.obtenerid())
-                        db.actualizarlatitud(location.latitude.toFloat())
-                        db.actualizarlongitud(location.longitude.toFloat())
                         actualizardestinationLatLng(newLatLng)
                     } else if(db.obtenerTipoUsuario() == "conductor"){
                         db.actualizarlatitud(location.latitude.toFloat())
