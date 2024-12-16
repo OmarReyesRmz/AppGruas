@@ -93,6 +93,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             })
             handler.postDelayed(this,1000)
         }
+
     }
 
     private val updateRunnable3 = object : Runnable {
@@ -874,8 +875,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     viajes?.let{
                         for(viaje in it){
                             if(viaje.id_cliente == id){
-                                dialogMessage2.text = viaje.modelo_del_auto
-                                dialogMessage3.text = viaje.placas_cliente
+//                                dialogMessage2.text = viaje.modelo_del_auto
+//                                dialogMessage3.text = viaje.placas_cliente
+                                  dialogMessage2.text = ""
+                                  dialogMessage3.text = ""
                             }
                         }
                     }
@@ -1065,7 +1068,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     clientes?.let {
                         for(cliente in it){
                             //Log.d("Nuevo viaje","${db.obtenerid()} = ${cliente.id} && ${cliente.ubicacion.activo}")
-                            if(db.obtenerid() == cliente.id && !cliente.ubicacion.activo){
+                            if(db.obtenerid() == cliente.id){
                                 nuevoviaje2(nuevoViaje)
                             }
                         }
