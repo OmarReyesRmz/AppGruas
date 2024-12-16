@@ -102,7 +102,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 override fun onResponse(
                     call: Call<List<Conductores>>,
                     response: Response<List<Conductores>>
-                ) {
+                ){
                     if (response.isSuccessful) {
                         val conductores = response.body()
                         conductores?.let {
@@ -316,6 +316,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         //Log.d("Hola", "Estoy pasando para actualizar la ubicacion del conductor2")
                         ActualizarDestinationUbication(conductor.solicitud.usuario,lntlng2)
                     }else {
+                        handler.removeCallbacks(updateRunnable3)
                         LeerClientes()
                     }
                     return
@@ -1124,6 +1125,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             WindowManager.LayoutParams.MATCH_PARENT
             WindowManager.LayoutParams.WRAP_CONTENT
             setDimAmount(0f)
+            setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+            )
         }
 
         dialog.setCanceledOnTouchOutside(false)
@@ -1155,6 +1160,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             WindowManager.LayoutParams.MATCH_PARENT
             WindowManager.LayoutParams.WRAP_CONTENT
             setDimAmount(0f)
+            setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+            )
         }
 
         dialog.setCanceledOnTouchOutside(false)
