@@ -259,7 +259,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     showinfo(nombre)
                 }
             }else if(db.obtenerTipoUsuario() == "conductor"){
-                Thread.sleep(1000)
                 NombreCliente { nombre ->
                     showinfo2(nombre)
                 }
