@@ -259,6 +259,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     showinfo(nombre)
                 }
             }else if(db.obtenerTipoUsuario() == "conductor"){
+                Thread.sleep(1000)
                 NombreCliente { nombre ->
                     showinfo2(nombre)
                 }
@@ -1184,7 +1185,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val viajes = response.body()
                     viajes?.let{
                         for(viaje in it){
-                            if(viaje.id_cliente == id){
+                            if(viaje.id_conductor == db.obtenerid()){
                                 dialogMessage2.text = viaje.modelo_del_auto
                                 dialogMessage3.text = viaje.placas_cliente
                             }
