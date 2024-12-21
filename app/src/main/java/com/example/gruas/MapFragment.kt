@@ -760,7 +760,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=${origin.latitude},${origin.longitude}" +
                 "&destination=${destination.latitude},${destination.longitude}" +
-                "&key=AIzaSyBgGEK7O07ZBDfggXBmGlBAZZAUyG56shQ"  // Reemplaza con tu clave de API válida
+                "&key=TU LLAVE GOOGLE MAPS"  // Reemplaza con tu clave de API válida
 
         Thread {
             try {
