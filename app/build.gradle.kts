@@ -65,6 +65,7 @@ dependencies {
 
     // Utilidades de Google Maps para funciones como `PolyUtil`
     implementation ("com.google.maps.android:android-maps-utils:2.4.0")
+    implementation ("com.google.android.material:material:1.11.0")
 
     // Biblioteca OkHttp para solicitudes HTTP
     implementation ("com.squareup.okhttp3:okhttp:4.11.0")
