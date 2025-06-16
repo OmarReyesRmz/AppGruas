@@ -98,32 +98,47 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private val updateRunnable3 = object : Runnable {
         override fun run() {
-            RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
-                override fun onResponse(
-                    call: Call<List<Conductores>>,
-                    response: Response<List<Conductores>>
-                ){
-                    if (response.isSuccessful) {
-                        val conductores = response.body()
-                        conductores?.let {
-                            for (conductor in it){
-                                if(conductor.aceptada == true && conductor.solicitud.usuario == db.obtenerid()) {
-                                    val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
-                                    comprobarconductor(it,LatLng)
-                                    Log.d("Hola","hubo un cambios en conductores")
+            if (!isDestinationUpdated) {
+                RetrofitClient.instance.getConductores()
+                    .enqueue(object : Callback<List<Conductores>> {
+                        override fun onResponse(
+                            call: Call<List<Conductores>>,
+                            response: Response<List<Conductores>>
+                        ) {
+                            if (response.isSuccessful) {
+                                val conductores = response.body()
+                                conductores?.let {
+                                    for (conductor in it) {
+                                        if (conductor.aceptada == true && conductor.solicitud.usuario == db.obtenerid()) {
+                                            val LatLng = LatLng(
+                                                db.obtenerLatitud().toDouble(),
+                                                db.obtenerLongitud().toDouble()
+                                            )
+                                            comprobarconductor(it, LatLng)
+                                            //Log.d("Hola","hubo un cambios en conductores")
+                                        }
+                                    }
                                 }
+                            } else {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Error en la respuesta",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
-                    } else {
-                        Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
-                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                    Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-            handler.postDelayed(this,1000)
+
+                        override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                            Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                            Toast.makeText(
+                                requireContext(),
+                                "Error 123 - : ${t.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    })
+            }
+            handler.postDelayed(this,2000)
         }
     }
 
@@ -292,8 +307,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun comprobarconductor(conductores: List<Conductores>, latLng: LatLng) {
         for (conductor in conductores) {
+            //Log.d("Hola1", "Ya acepte un pedido estoy en viaje")
             if (conductor.ubicacion.activo) {
+                //Log.d("Hola2", "Ya acepte un pedido estoy en viaje")
                 if(db.obtenerTipoUsuario() == "cliente" && db.obtenerRealizadoPedido() == "REALIZANDO"){
+                    Log.d("Hola2.1", "Ya acepte un pedido estoy en viaje")
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         val latLng2 = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
                         destinationLatLng = latLng
@@ -309,8 +327,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
+
+                    Log.d("Hola", "Error no hay aceptada en conductor, vuelve a leer")
                     if(conductor.aceptada){
-                        //Log.d("Hola", "Ya acepte un pedido estoy en viaje")
+                        Log.d("Hola", "Ya acepte un pedido estoy en viaje")
                         actualizarConductor(conductor.id,db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,true,conductor.solicitud.usuario,false)
                         val lntlng2 = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                         //Log.d("Hola", "Estoy pasando para actualizar la ubicacion del conductor2")
@@ -334,7 +354,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     }
 
-    fun actualizarConductor(id: Int, latitud: Double, longitud: Double, espera: Boolean, atendido: Boolean, idcliente: Int, Bandera: Boolean) {
+    fun actualizarConductor(id: Int, latitud: Double, longitud: Double, espera: Boolean, atendido: Boolean, idcliente: Int? = null, Bandera: Boolean) {
         val conductor = ActualizarDatosConductores(
             latitud = latitud,
             longitud = longitud,
@@ -349,8 +369,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         call.enqueue(object : Callback<Conductores> {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
-                    // La actualización fue exitosa, puedes manejar la respuesta
-                    Log.d("Conductor", "Conductor actualizado exitosamente")
                     if(Bandera) {
                         LeerConductores(idcliente)
                     }
@@ -438,7 +456,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun LeerConductores(id: Int){
+    fun LeerConductores(id: Int? = null){
         RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
             override fun onResponse(
                 call: Call<List<Conductores>>,
@@ -499,13 +517,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                 handler.removeCallbacks(updateRunnable4)
                                 isDestinationUpdated = false
                                 banderapaso = false
-                                actualizarCliente(cliente.id,cliente.ubicacion.latitud,cliente.ubicacion.longitud,false,false,0)
+                                actualizarCliente(cliente.id,cliente.ubicacion.latitud,cliente.ubicacion.longitud,false,false,null)
                                 Thread.sleep(500)
                                 if(db.obtenerTipoUsuario() == "cliente") {
                                     showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
                                 }
                             }else if(db.obtenerid() == cliente.id && db.obtenerRealizadoPedido()=="REALIZANDO" && !Bandera && !cliente.ubicacion.atendido){
-                                actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,0)
+                                actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,null)
                                 //Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
                             }
                         }
@@ -530,21 +548,32 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun comprobarconductores2(conductores: List<Conductores>, id: Int){
+    private fun comprobarconductores2(conductores: List<Conductores>, id: Int? = null){
         var band = 10000000
-
-        for (conductor in conductores) {
-            if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
-                //actualizar solicitud aceptada
-                ActualizarSolicitudAceptada(conductor.id)
-                band = conductor.id
-                break;
+        //id = id_cliente
+        conductores.firstOrNull {
+            !it.aceptada && it.solicitud.espera && it.id == db.obtenerid()
+        }?.let { conductor ->
+            ActualizarSolicitudAceptada(conductor.id) { success ->
+                if (success) {
+                    Log.d("Vairiable","Variable actualizada aceptada de manera correcta")
+                    // Solo si se actualizó aceptada correctamente
+                    actualizarConductor(
+                        conductor.id,
+                        conductor.ubicacion.latitud,
+                        conductor.ubicacion.longitud,
+                        false, // espera = false
+                        false, // atendido = false
+                        id,
+                        false
+                    )
+                }
             }
         }
 
         for(conductor in conductores){
             if(!conductor.aceptada && conductor.solicitud.espera && conductor.ubicacion.activo && band != conductor.id){
-                actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,0,false)
+                actualizarConductor(conductor.id,conductor.ubicacion.latitud.toDouble(),conductor.ubicacion.longitud.toDouble(), false, false,null,false)
             }
         }
 
@@ -624,27 +653,23 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun ActualizarSolicitudAceptada(id: Int){
-        val aceptada = ActualizarAceptadaRequest(
-            aceptada = true
-        )
-        val call = RetrofitClient.instance.actualizarAceptada(id,aceptada)
+    fun ActualizarSolicitudAceptada(id: Int, callback: (Boolean) -> Unit) {
+        val aceptada = ActualizarAceptadaRequest(aceptada = true)
+        val call = RetrofitClient.instance.actualizarAceptada(id, aceptada)
 
         call.enqueue(object : Callback<Conductores> {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
-                    // La actualización fue exitosa, puedes manejar la respuesta
-                    handler.removeCallbacks(updateRunnable2)
                     Log.d("Aceptada", "Conductor actualizado exitosamente")
+                    callback(true)
                 } else {
-                    // Manejar el error si la respuesta no es exitosa
-                    Log.e("Aceptada", "Error al actualizar el cliente: ${response.message()}")
+                    Log.e("Aceptada", "Error al actualizar: ${response.message()}")
+                    callback(false)
                 }
             }
-
             override fun onFailure(call: Call<Conductores>, t: Throwable) {
-                // Manejar errores de red o problemas con Retrofit
-                Log.e("Aceptada", "Error de red o conexión: ${t.message}")
+                Log.e("Aceptada", "Error de red: ${t.message}")
+                callback(false)
             }
         })
     }
@@ -729,7 +754,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun actualizarCliente(id: Int, latitud: Double, longitud: Double,Activo: Boolean, Atendido: Boolean, Conductor: Int) {
+    fun actualizarCliente(id: Int, latitud: Double, longitud: Double,Activo: Boolean, Atendido: Boolean, Conductor: Int? = null) {
         val cliente = ActualizarDatosClientes(
             latitud = latitud,
             longitud = longitud,
@@ -760,7 +785,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=${origin.latitude},${origin.longitude}" +
                 "&destination=${destination.latitude},${destination.longitude}" +
-                "&key=TU LLAVE GOOGLE MAPS"  // Reemplaza con tu clave de API válida
+                "&key=AIzaSyBgGEK7O07ZBDfggXBmGlBAZZAUyG56shQ"  // Reemplaza con tu clave de API válida
 
         Thread {
             try {
@@ -866,35 +891,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val dialogMessage3 = dialogView.findViewById<TextView>(R.id.dialog_address)
         val dialogButton = dialogView.findViewById<Button>(R.id.dialog_button)
 
-        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
-            override fun onResponse(
-                call: Call<List<RegistrarViaje>>,
-                response: Response<List<RegistrarViaje>>
-            ) {
-                if (response.isSuccessful) {
-                    val viajes = response.body()
-                    viajes?.let{
-                        for(viaje in it){
-                            if(viaje.id_cliente == id){
-//                                dialogMessage2.text = viaje.modelo_del_auto
-//                                dialogMessage3.text = viaje.placas_cliente
-                                  dialogMessage2.text = ""
-                                  dialogMessage3.text = ""
-                            }
-                        }
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
-                }
-            }
-            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
-                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
-
-        dialogMessage.text = message
-
         dialogButton.setOnClickListener {
             dialogButton.isEnabled = false
             actualizarConductor(
@@ -912,6 +908,33 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             currentDialog = null
             dialog.dismiss()
         }
+
+        RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
+            override fun onResponse(
+                call: Call<List<RegistrarViaje>>,
+                response: Response<List<RegistrarViaje>>
+            ) {
+                if (response.isSuccessful) {
+                    val viajes = response.body()
+                    viajes?.let{
+                        for(viaje in it){
+                            if(viaje.id_cliente == id){
+                                dialogMessage2.text = viaje.modelo_del_auto
+                                dialogMessage3.text = viaje.placas_cliente
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<List<RegistrarViaje>>, t: Throwable) {
+                Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        dialogMessage.text = message
 
         dialog.setOnDismissListener {
             dialogButton.isEnabled = false
@@ -1033,31 +1056,31 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         var id_cliente: Int = 0
         var latitud_cliente: Double = 0.0000
         var longitud_cliente: Double= 0.0000
-        var tipo_grua: String = ""
+        var id_grua: Int? = null
         var direccion_envio: String = ""
         var modelo_del_auto: String = ""
         var placas_cliente: String = ""
         var comentarios:String = ""
         var latitud_conductor: Double= 0.0000
         var longitud_conductor: Double= 0.0000
-        var id_conductor: Int = 0
+        var id_conductor: Int? = null
+        var costo_neutro: Double = 0.0000
+        var costo_iva: Double = 0.0000
 
         if(db.obtenerTipoUsuario() == "cliente"){
             id_cliente = db.obtenerid()
             latitud_cliente = db.obtenerLatitud().toDouble()
             longitud_cliente = db.obtenerLongitud().toDouble()
-            tipo_grua = db.obtenerTipodegrua()
             comentarios = db.obtenerComentarios()
             placas_cliente = db.obtenerPlacas()
             modelo_del_auto = db.obtenerModeloauto()
         }
 
         val nuevoViaje =
-            RegistrarViaje(id_cliente,latitud_cliente,longitud_cliente,tipo_grua,
-            direccion_envio,modelo_del_auto,placas_cliente,comentarios,latitud_conductor,
-            longitud_conductor,id_conductor)
+            RegistrarViaje(id_cliente,id_conductor,id_grua,latitud_cliente,longitud_cliente,latitud_conductor,
+                            longitud_conductor,modelo_del_auto,placas_cliente,comentarios,costo_neutro,costo_iva)
 
-
+        Log.d("Problema1", nuevoViaje.toString())
         //Verificar que no este ya en un viaje
         RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(

@@ -2,6 +2,7 @@ package com.example.gruas
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,9 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class HomeFragment : Fragment() {
 
@@ -86,21 +90,12 @@ class HomeFragment : Fragment() {
 
 
     private fun setupSpinners(view: View) {
-        // Datos para los Spinners
-        val locationOptions = listOf("Mi Ubicación")
-        val craneOptions = listOf(
-            "Grua Hidráulica",
-            "Grua de Plataforma",
-            "Grua de Arrastre",
-            "Grua Telescópica",
-            "Grua de Carga"
-        )
-
         // Referencias de los Spinners
         val locationSpinner: Spinner = view.findViewById(R.id.spinnerLocation)
         val craneSpinner: Spinner = view.findViewById(R.id.spinnerCraneType)
 
-        // Adaptadores para los Spinners
+        // 1. Spinner de Ubicación (se mantiene igual)
+        val locationOptions = listOf("Mi Ubicación")
         val locationAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -109,15 +104,10 @@ class HomeFragment : Fragment() {
         locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         locationSpinner.adapter = locationAdapter
 
-        val craneAdapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            craneOptions
-        )
-        craneAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        craneSpinner.adapter = craneAdapter
+        // 2. Spinner de Grúas (nueva implementación con API)
+        setupCraneSpinner(craneSpinner)
 
-        // Manejo de selección
+        // Manejo de selección (se mantiene similar pero adaptado)
         locationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -126,29 +116,90 @@ class HomeFragment : Fragment() {
                 id: Long
             ) {
                 val selectedLocation = locationOptions[position]
-                // Realiza acciones con el valor seleccionado
+                // Acciones con la ubicación seleccionada
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // No se seleccionó nada
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+    }
 
-        craneSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                val selectedCrane = craneOptions[position]
-                // Realiza acciones con el valor seleccionado
+    private fun setupCraneSpinner(spinner: Spinner) {
+        // Mostrar datos estáticos iniciales (como fallback rápido)
+        val fallbackOptions = listOf(
+            "Grua Hidráulica",
+            "Grua de Plataforma",
+            "Grua de Arrastre",
+            "Grua Telescópica",
+            "Grua de Carga"
+        )
+
+        val tempAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            fallbackOptions
+        )
+        tempAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = tempAdapter
+
+        // Cargar datos reales desde API
+        RetrofitClient.instance.getGruas().enqueue(object : Callback<List<Gruas>> {
+            override fun onResponse(call: Call<List<Gruas>>, response: Response<List<Gruas>>) {
+                if (response.isSuccessful) {
+                    val gruas = response.body() ?: emptyList()
+
+                    // Filtrar tipos de grúas únicos
+                    val tiposUnicos = gruas
+                        .map { it.tipo_grua }
+                        .distinct() // Esto elimina duplicados
+                        .sorted() // Opcional: orden alfabético
+
+                    // Si encontramos tipos únicos, actualizamos el Spinner
+                    if (tiposUnicos.isNotEmpty()) {
+                        val adapter = ArrayAdapter(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            tiposUnicos
+                        )
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        spinner.adapter = adapter
+                    }
+
+                    // Si no hay grúas, mantener las opciones por defecto
+                    if (tiposUnicos.isNotEmpty()) {
+                        val adapter = ArrayAdapter(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            tiposUnicos
+                        )
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        spinner.adapter = adapter
+                    }
+
+                    // Manejar selección con datos reales
+                    spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>?,
+                            view: View?,
+                            position: Int,
+                            id: Long
+                        ) {
+                            val selectedGrua = gruas.getOrNull(position)
+                            selectedGrua?.let {
+                                // Aquí tienes acceso a todos los datos de la grúa seleccionada
+                                Log.d("GruaSeleccionada", "ID: ${it.id_grua}, Tipo: ${it.tipo_grua}")
+                            }
+                        }
+
+                        override fun onNothingSelected(parent: AdapterView<*>?) {}
+                    }
+                }
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // No se seleccionó nada
+            override fun onFailure(call: Call<List<Gruas>>, t: Throwable) {
+                Log.e("API Error", "No se pudieron cargar las grúas", t)
+                // Mantener las opciones por defecto que ya estaban configuradas
             }
-        }
+        })
     }
 
     private fun navigateToMapFragment() {

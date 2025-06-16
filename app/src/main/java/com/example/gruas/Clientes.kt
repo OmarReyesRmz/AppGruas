@@ -1,9 +1,10 @@
 package com.example.gruas
 
 import com.example.gruas.Ubicacion
+import com.google.gson.annotations.SerializedName
 
 data class Clientes(
-    val id: Int,
+    @SerializedName("id_usuario") val id: Int,
     val nombre: String,
     val apellido: String,
     val direccion: String,

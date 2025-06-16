@@ -1,7 +1,9 @@
 package com.example.gruas
 
+import com.google.gson.annotations.SerializedName
+
 class Conductores (
-    val id: Int,
+    @SerializedName("id_usuario") val id: Int,
     val nombre: String,
     val apellido: String,
     val direccion: String,

@@ -5,5 +5,5 @@ data class ActualizarDatosClientes (
     val longitud: Double,
     val activo: Boolean,
     val atendido: Boolean,
-    val conductor: Int
+    val conductor: Int? = null
 )

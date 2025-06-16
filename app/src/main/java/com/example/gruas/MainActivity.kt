@@ -80,7 +80,6 @@
                 })
             }
 
-
             btnRegistrar.setOnClickListener{
                 val intent = Intent(this, NuevoRegistro::class.java)
                 startActivity(intent)
@@ -110,6 +109,7 @@
                         db.actualizardireccion(cliente.direccion)
                         db.actualizartelefono(cliente.telefono)
                         db.actualizarid(cliente.id)
+                        //Log.d("IDDDD", cliente.id.toString()+db.obtenerid().toString() + db.obtenernombre() + db.obtenerCorreo())
                         db.actualizarlogeado("SI")
                         db.actualizartipo_usuario("cliente")
                         startActivity(intent)
@@ -169,6 +169,7 @@
                         // Se equivo de contraseña pero no email
                         // Mostrar una ventana emergente si los campos están vacíos
                         showCustomDialog("La contraseña que ingresaste no es correcta. ¿Quieres intentarlo de nuevo?")
+
                         return
                     }
                 }

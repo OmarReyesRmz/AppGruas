@@ -5,7 +5,7 @@ data class Ubicacion(
     val longitud: Double,
     val activo: Boolean,
     val atendido: Boolean,
-    val conductor: Int
+    val conductor: Int? = null
 )
 
 data class Ubicacion2(

@@ -6,5 +6,5 @@ data class ActualizarDatosConductores(
     val activo: Boolean,
     val atendido: Boolean,
     val espera: Boolean,
-    val usuario: Int
+    val usuario: Int? = null
 )
