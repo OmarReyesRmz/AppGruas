@@ -138,7 +138,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         val conductores = response.body()
                         conductores?.let {
                             for (conductor in it){
-                                Thread.sleep(5000)
                                 if(conductor.aceptada == false && conductor.solicitud.usuario != 0) {
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
@@ -313,8 +312,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
-
-                    Log.d("Hola", "Error no hay aceptada en conductor, vuelve a leer")
                     if(conductor.aceptada){
                         Log.d("Hola", "Ya acepte un pedido estoy en viaje")
                         actualizarConductor(conductor.id,db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,true,conductor.solicitud.usuario,false)
@@ -328,7 +325,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     return
                 }else if(db.obtenerRealizadoPedido() == "NINGUNO"){
                     isDestinationUpdated = false
-                    Log.d("Hola","no hay ningun pedido para este usuario")
                     updateLocationOnMap(latLng)
                 }
             }
@@ -341,6 +337,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun actualizarConductor(id: Int, latitud: Double, longitud: Double, espera: Boolean, atendido: Boolean, idcliente: Int? = null, Bandera: Boolean) {
+        Log.d("Actualizacion", "Conductor $id - Espera: $espera, Atendido: $atendido")
         val conductor = ActualizarDatosConductores(
             latitud = latitud,
             longitud = longitud,
@@ -351,13 +348,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         )
 
         val call = RetrofitClient.instance.actualizarConductores(id, conductor)
-//        Log.d("Conductoressss", "Conductor intentando actualizar")
-//        Log.d("Conductoressss", conductor.toString())
+
         call.enqueue(object : Callback<Conductores> {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
-                    // La actualización fue exitosa, puedes manejar la respuesta
-                    //Log.d("Conductoressss", "Conductor actualizado exitosamente")
                     if(Bandera) {
                         LeerConductores(idcliente)
                     }
@@ -890,6 +884,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             currentDialog = null
             dialog.dismiss()
         }
+
 
         RetrofitClient.instance.getViajes().enqueue(object : Callback<List<RegistrarViaje>> {
             override fun onResponse(
