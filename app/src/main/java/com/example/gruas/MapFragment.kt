@@ -98,47 +98,32 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private val updateRunnable3 = object : Runnable {
         override fun run() {
-            if (!isDestinationUpdated) {
-                RetrofitClient.instance.getConductores()
-                    .enqueue(object : Callback<List<Conductores>> {
-                        override fun onResponse(
-                            call: Call<List<Conductores>>,
-                            response: Response<List<Conductores>>
-                        ) {
-                            if (response.isSuccessful) {
-                                val conductores = response.body()
-                                conductores?.let {
-                                    for (conductor in it) {
-                                        if (conductor.aceptada == true && conductor.solicitud.usuario == db.obtenerid()) {
-                                            val LatLng = LatLng(
-                                                db.obtenerLatitud().toDouble(),
-                                                db.obtenerLongitud().toDouble()
-                                            )
-                                            comprobarconductor(it, LatLng)
-                                            //Log.d("Hola","hubo un cambios en conductores")
-                                        }
-                                    }
+            RetrofitClient.instance.getConductores().enqueue(object : Callback<List<Conductores>> {
+                override fun onResponse(
+                    call: Call<List<Conductores>>,
+                    response: Response<List<Conductores>>
+                ){
+                    if (response.isSuccessful) {
+                        val conductores = response.body()
+                        conductores?.let {
+                            for (conductor in it){
+                                if(conductor.aceptada == true && conductor.solicitud.usuario == db.obtenerid()) {
+                                    val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
+                                    comprobarconductor(it,LatLng)
+                                    //Log.d("Hola","hubo un cambios en conductores")
                                 }
-                            } else {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Error en la respuesta",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
                         }
-
-                        override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
-                            Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
-                            Toast.makeText(
-                                requireContext(),
-                                "Error 123 - : ${t.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    })
-            }
-            handler.postDelayed(this,2000)
+                    } else {
+                        Toast.makeText(requireContext(), "Error en la respuesta", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<List<Conductores>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error al conectar con la API: ${t.message}")
+                    Toast.makeText(requireContext(), "Error 123 - : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+            handler.postDelayed(this,1000)
         }
     }
 
@@ -153,6 +138,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         val conductores = response.body()
                         conductores?.let {
                             for (conductor in it){
+                                Thread.sleep(5000)
                                 if(conductor.aceptada == false && conductor.solicitud.usuario != 0) {
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
@@ -365,10 +351,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         )
 
         val call = RetrofitClient.instance.actualizarConductores(id, conductor)
-
+//        Log.d("Conductoressss", "Conductor intentando actualizar")
+//        Log.d("Conductoressss", conductor.toString())
         call.enqueue(object : Callback<Conductores> {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    //Log.d("Conductoressss", "Conductor actualizado exitosamente")
                     if(Bandera) {
                         LeerConductores(idcliente)
                     }
@@ -551,23 +540,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun comprobarconductores2(conductores: List<Conductores>, id: Int? = null){
         var band = 10000000
         //id = id_cliente
-        conductores.firstOrNull {
-            !it.aceptada && it.solicitud.espera && it.id == db.obtenerid()
-        }?.let { conductor ->
-            ActualizarSolicitudAceptada(conductor.id) { success ->
-                if (success) {
-                    Log.d("Vairiable","Variable actualizada aceptada de manera correcta")
-                    // Solo si se actualizó aceptada correctamente
-                    actualizarConductor(
-                        conductor.id,
-                        conductor.ubicacion.latitud,
-                        conductor.ubicacion.longitud,
-                        false, // espera = false
-                        false, // atendido = false
-                        id,
-                        false
-                    )
-                }
+        for (conductor in conductores) {
+            if(!conductor.aceptada && conductor.solicitud.espera && conductor.id == db.obtenerid()){
+                //actualizar solicitud aceptada
+                ActualizarSolicitudAceptada(conductor.id)
+                band = conductor.id
+                break;
             }
         }
 
@@ -653,23 +631,27 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun ActualizarSolicitudAceptada(id: Int, callback: (Boolean) -> Unit) {
-        val aceptada = ActualizarAceptadaRequest(aceptada = true)
-        val call = RetrofitClient.instance.actualizarAceptada(id, aceptada)
+    fun ActualizarSolicitudAceptada(id: Int){
+        val aceptada = ActualizarAceptadaRequest(
+            aceptada = true
+        )
+        val call = RetrofitClient.instance.actualizarAceptada(id,aceptada)
 
         call.enqueue(object : Callback<Conductores> {
             override fun onResponse(call: Call<Conductores>, response: Response<Conductores>) {
                 if (response.isSuccessful) {
+                    // La actualización fue exitosa, puedes manejar la respuesta
+                    handler.removeCallbacks(updateRunnable2)
                     Log.d("Aceptada", "Conductor actualizado exitosamente")
-                    callback(true)
                 } else {
-                    Log.e("Aceptada", "Error al actualizar: ${response.message()}")
-                    callback(false)
+                    // Manejar el error si la respuesta no es exitosa
+                    Log.e("Aceptada", "Error al actualizar el cliente: ${response.message()}")
                 }
             }
+
             override fun onFailure(call: Call<Conductores>, t: Throwable) {
-                Log.e("Aceptada", "Error de red: ${t.message}")
-                callback(false)
+                // Manejar errores de red o problemas con Retrofit
+                Log.e("Aceptada", "Error de red o conexión: ${t.message}")
             }
         })
     }
