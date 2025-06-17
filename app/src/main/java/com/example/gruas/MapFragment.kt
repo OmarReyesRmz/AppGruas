@@ -232,6 +232,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         LeerClientes2(false, db.obtenerid())
                         actualizardestinationLatLng(newLatLng)
                     } else if(db.obtenerTipoUsuario() == "conductor"){
+                        Log.d("Datos_conductor","Datos conductor ID: ${db.obtenerid()}")
                         db.actualizarlatitud(location.latitude.toFloat())
                         db.actualizarlongitud(location.longitude.toFloat())
                         actualizardestinationLatLng(newLatLng)
@@ -252,7 +253,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         //Log.d("Hola","estoy actualizando las hubicaciones")
         // Verificar si el destino ha sido actualizado
         if (isDestinationUpdated) {
-            //Log.d("Hola","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
+            Log.d("Datos_conductor","${latLng.longitude} - ${latLng.latitude} /// ${destinationLatLng.longitude} - ${destinationLatLng.latitude}")
+            Log.d("Hola2","Realizando viaje")
+            getDirections(latLng, destinationLatLng)
             map.addMarker(MarkerOptions().position(destinationLatLng).title("Destino"))
             if(db.obtenerTipoUsuario() == "cliente"){
                 NombreConductor { nombre ->
@@ -263,7 +266,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     showinfo2(nombre)
                 }
             }
-            getDirections(latLng, destinationLatLng)
         }
     }
 
@@ -294,9 +296,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         for (conductor in conductores) {
             //Log.d("Hola1", "Ya acepte un pedido estoy en viaje")
             if (conductor.ubicacion.activo) {
-                //Log.d("Hola2", "Ya acepte un pedido estoy en viaje")
                 if(db.obtenerTipoUsuario() == "cliente" && db.obtenerRealizadoPedido() == "REALIZANDO"){
-                    Log.d("Hola2.1", "Ya acepte un pedido estoy en viaje")
                     if(conductor.aceptada && db.obtenerid() == conductor.solicitud.usuario){
                         val latLng2 = LatLng(conductor.ubicacion.latitud, conductor.ubicacion.longitud)
                         destinationLatLng = latLng
@@ -305,6 +305,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         handler.post(updateRunnable4)
                         currentDialog2?.dismiss()
                         currentDialog2 = null
+
                         actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,true, conductor.id)
                         updateLocationOnMap(latLng2)
                         break
@@ -312,17 +313,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }else if(db.obtenerTipoUsuario() == "conductor" && db.obtenerid() == conductor.id){
                     db.actualizarlatitud(conductor.ubicacion.latitud.toFloat())//latLng.latitud.toFloat()
                     db.actualizarlongitud(conductor.ubicacion.longitud.toFloat())//latLng.longitude.toFloat()
+                    Log.d("Hola2", "Ya acepte un pedido estoy en viaje1")
                     if(conductor.aceptada){
-                        Log.d("Hola", "Ya acepte un pedido estoy en viaje")
+                        Log.d("Hola2", "Ya acepte un pedido estoy en viaje2")
                         actualizarConductor(conductor.id,db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),false,true,conductor.solicitud.usuario,false)
                         val lntlng2 = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                         //Log.d("Hola", "Estoy pasando para actualizar la ubicacion del conductor2")
                         ActualizarDestinationUbication(conductor.solicitud.usuario,lntlng2)
                     }else {
                         handler.removeCallbacks(updateRunnable3)
+                        Log.d("Datos_conductor","Entre aqui")
                         LeerClientes()
                     }
-                    return
                 }else if(db.obtenerRealizadoPedido() == "NINGUNO"){
                     isDestinationUpdated = false
                     updateLocationOnMap(latLng)
@@ -462,6 +464,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     fun LeerClientes(){
+        Log.d("Datos_conductor","Lectura de clientes")
         RetrofitClient.instance.getClientes().enqueue(object : Callback<List<Clientes>> {
             override fun onResponse(
                 call: Call<List<Clientes>>,
@@ -496,6 +499,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     clientes?.let {
                         for (cliente in it){
                             if(Id == cliente.id && cliente.ubicacion.conductor != 0 && Bandera){
+                                Log.d("Datos_cond","No se porque entre aqui pero entre")
                                 db.actualizarrealizarpedido("NINGUNO")
                                 handler.removeCallbacks(updateRunnable4)
                                 isDestinationUpdated = false
@@ -506,6 +510,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                     showCustomDialog2("Ya termino tu pedido puedes volver a pedir\notro servicio cuando quieras")
                                 }
                             }else if(db.obtenerid() == cliente.id && db.obtenerRealizadoPedido()=="REALIZANDO" && !Bandera && !cliente.ubicacion.atendido){
+                                Log.d("Datos_cond","No se porque entre aqui pero entre")
                                 actualizarCliente(db.obtenerid(),db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble(),true,false,null)
                                 //Log.d("Prubea","Ya actualice el cliente - ${cliente.id} a 0 conductor")
                             }
@@ -524,6 +529,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     fun comprobarcliente(cliente: List<Clientes>){
         for(clientes in cliente){
+            Log.d("Datos_conductor","Mensajes de pedidos")
             if(clientes.ubicacion.activo && !clientes.ubicacion.atendido){
                 mostrarpedido(clientes.id, clientes.nombre)
                 return
@@ -554,7 +560,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             if(conductor.solicitud.usuario == id){
                 val lntlng = LatLng(conductor.ubicacion.latitud,conductor.ubicacion.longitud)
                 //Log.d("Hola","Antes de entrar")
-
+                Log.d("Datos_cond","Actualizando viajes")
                 actualizarviaje(conductor.id, conductor.ubicacion.latitud, conductor.ubicacion.longitud, conductor.solicitud.usuario)
                 ActualizarDestinationUbication(id,lntlng)
                 //Log.d("Hola","despues de entrar")
@@ -709,9 +715,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     clientes?.let {
                         //Log.d("Hola","id cliente $id")
                         for(clientes in it){
-                            //Log.d("Hola","id cliente $id entre")
+                            Log.d("Hola","id cliente $id entre")
                             if(clientes.id == id){
-                                //Log.d("Hola","Actualizada ${clientes.ubicacion.latitud} - ${clientes.ubicacion.longitud} //// ${lntlng.longitude} - ${lntlng.latitude}")
+                                Log.d("Hola","Actualizada ${clientes.ubicacion.latitud} - ${clientes.ubicacion.longitud} //// ${lntlng.longitude} - ${lntlng.latitude}")
                                 destinationLatLng = LatLng(clientes.ubicacion.latitud.toDouble(), clientes.ubicacion.longitud.toDouble())
                                 isDestinationUpdated = true
                                 updateLocationOnMap(lntlng)
@@ -738,7 +744,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             atendido = Atendido,
             conductor = Conductor
         )
-
+        Log.d("Datos_con", cliente.toString())
         val call = RetrofitClient.instance.actualizarCliente(id, cliente)
 
         call.enqueue(object : Callback<Clientes> {
