@@ -1212,6 +1212,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
             dialogButton.isEnabled = false
             ActualizarSolicitudAceptada2(db.obtenerid())
+            BorrarSolicitud(db.obtenerid())
             handler.post(updateRunnable4)
             onButtonClick?.invoke()
             // Limpiar la referencia al diálogo actual
@@ -1228,5 +1229,23 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         dialog.show()
+    }
+
+    private fun BorrarSolicitud(id: Int){
+        val call = RetrofitClient.instance.eliminarSolicitud(id)
+
+        call.enqueue(object : Callback<RespuestaServidor> {
+            override fun onResponse(call: Call<RespuestaServidor>, response: Response<RespuestaServidor>) {
+                if (response.isSuccessful) {
+                    println("Respuesta del servidor: ${response.body()?.message}")
+                } else {
+                    println("Error HTTP: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<RespuestaServidor>, t: Throwable) {
+                println("Fallo de red o servidor: ${t.message}")
+            }
+        })
     }
 }

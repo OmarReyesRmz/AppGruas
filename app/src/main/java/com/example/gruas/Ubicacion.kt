@@ -15,3 +15,8 @@ data class Ubicacion2(
     val atendido: Boolean
 )
 
+data class RespuestaServidor(
+    val message: String
+)
+
+

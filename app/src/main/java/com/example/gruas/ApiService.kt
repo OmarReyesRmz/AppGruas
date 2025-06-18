@@ -2,6 +2,7 @@ package com.example.gruas
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -48,6 +49,12 @@ interface ApiService {
         @Path("id") id: Int,
         @Body request: ActualizarAceptadaRequest
     ): Call<Conductores>
+
+    @DELETE("eliminar-solicitud/{id_conductor}")
+    fun eliminarSolicitud(
+        @Path("id_conductor") idConductor: Int
+    ): Call<RespuestaServidor>
+
 
     @PUT("clientes/actualizar-activo/clientes/:{id}")
     fun actualizarActivo(
