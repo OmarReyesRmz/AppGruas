@@ -140,6 +140,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                             for (conductor in it){
                                 if(conductor.aceptada == false && conductor.solicitud.usuario != 0) {
                                     val LatLng = LatLng(db.obtenerLatitud().toDouble(),db.obtenerLongitud().toDouble())
+                                    Log.d("Intentando","Intentando borrar solicitud ${db.obtenerid()}")
+                                    BorrarSolicitud(db.obtenerid())
                                     ActualizarSolicitudAtivo(conductor.solicitud.usuario, false)
                                     LeerClientes2(true,conductor.solicitud.usuario)
                                     if(db.obtenerTipoUsuario() == "cliente"){
@@ -153,6 +155,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                     Thread.sleep(1000)
                                     actualizardestinationLatLng(LatLng)
                                     Log.d("Hola","Un conductor termino su viaje")
+
                                 }
                             }
                         }
@@ -1191,6 +1194,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     viajes?.let{
                         for(viaje in it){
                             if(viaje.id_conductor == db.obtenerid()){
+                                dialogMessage.text = (viaje.costo_neutro + viaje.costo_iva).toString()
                                 dialogMessage2.text = viaje.modelo_del_auto
                                 dialogMessage3.text = viaje.placas_cliente
                             }
@@ -1212,7 +1216,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
             dialogButton.isEnabled = false
             ActualizarSolicitudAceptada2(db.obtenerid())
-            BorrarSolicitud(db.obtenerid())
             handler.post(updateRunnable4)
             onButtonClick?.invoke()
             // Limpiar la referencia al diálogo actual

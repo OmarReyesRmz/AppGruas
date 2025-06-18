@@ -50,7 +50,7 @@ interface ApiService {
         @Body request: ActualizarAceptadaRequest
     ): Call<Conductores>
 
-    @DELETE("eliminar-solicitud/{id_conductor}")
+    @DELETE("clientes/eliminar-solicitud/:{id_conductor}")
     fun eliminarSolicitud(
         @Path("id_conductor") idConductor: Int
     ): Call<RespuestaServidor>

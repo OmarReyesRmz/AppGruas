@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.0.20:3000/api/"
+    private const val BASE_URL = "http://172.16.116.56:3000/api/"
 
     val instance: ApiService by lazy {
         val logging = HttpLoggingInterceptor()
